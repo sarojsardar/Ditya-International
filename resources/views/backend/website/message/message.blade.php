@@ -1,0 +1,138 @@
+@extends('backend.layout')
+
+@section('title')
+Message From Chairman | {{ config('app.name') }}
+@endsection
+
+@section('content')
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4 pb-4 border-bottom mb-4">
+
+        <div class="d-flex flex-column justify-content-center">
+            <div class="d-flex align-items-center me-5 gap-4">
+                <div class="avatar">
+                    <div class="avatar-initial bg-label-primary rounded-3">
+                        <i class="ri-user-voice-line ri-24px"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="mb-0">Chairman Message</h5>
+                    <span>Chairman Message Information</span>
+                </div>
+            </div>
+        </div>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-style1 fst-italic">
+                <li class="breadcrumb-item">
+                    <a href="javascript:void(0);">Home</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="javascript:void(0);">Chairman Message</a>
+                </li>
+                <li class="breadcrumb-item active">Add</li>
+            </ol>
+        </nav>
+    </div>
+
+    <form action="{{ route('website.storeChairmanMessage') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <div class="row">
+            <div class="col-12 col-lg-8">
+                <div class="card mb-6">
+                    <div class="card-header card-header-color">
+                        <h5>Message From Chairman</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <div class="form-group">
+                                    <label for="">Chairman Name: </label>
+                                    <input type="text" name="chairman_name" class="form-control"
+                                        value="{{ @$webContent->chairman_name }}">
+                                    @if($errors->has('chairman_name'))
+                                    <ul class="parsley-errors-list filled">
+                                        <li class="parsley-required">{{ $errors->first('chairman_name') }}</li>
+                                    </ul>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-4">
+                                <div class="form-group">
+                                    <label for="">Description: </label>
+                                    <textarea id="description" name="chairman_message" class="form-control">
+                                            {!! old('chairman_message', @$webContent->chairman_message) !!}
+                                        </textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card mb-6">
+                    <div class="card-header card-header-color">
+                        Upload Image
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <div class="form-group">
+                                    <label for="">Chairman Image: </label>
+                                    <input type="file" onchange="setDisplayImage(event);" name="profile"
+                                        class="form-control-file" accept="image/png, image/gif, image/jpeg">
+                                    @if($errors->has('profile'))
+                                    <ul class="parsley-errors-list filled">
+                                        <li class="parsley-required">{{ $errors->first('profile') }}</li>
+                                    </ul>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-4">
+                                <div class="form-group">
+                                    <label for="">Preview: </label>
+                                    <div id="image_preview">
+                                        <img src='{{ @$webContent->chairman_profile ? url('
+                                            /storage/uploads/chairman-image/'.@$webContent->chairman_profile) :
+                                        asset('no-file.png') }}' alt='preview' style='height: 120px;width: auto;'>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <div class="d-grid w-25 mt-6">
+                <button type="submit" class="btn btn-primary waves-effect waves-light">
+                    Update
+                </button>
+            </div>
+        </div>
+    </form>
+
+
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    CKEDITOR.replace('description');
+
+
+        function setDisplayImage(event){
+            var file = event.target.files;
+            $('#image_preview').empty();
+            for(i=0;i<file.length;i++){
+                let url = URL.createObjectURL(file[i]);
+                $('#image_preview').append("<img src='"+url+"' alt='problem image' style='height: 120px;width: auto;'>")
+            }
+        }
+</script>
+@endpush
