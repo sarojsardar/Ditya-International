@@ -27,6 +27,11 @@ class GenderSeeder extends Seeder
             "slug" => "female"
         ]);
 
+        Gender::create([
+            "name" => "other",
+            "slug" => "other"
+        ]);
+
         Schema::enableForeignKeyConstraints();
     }
 }

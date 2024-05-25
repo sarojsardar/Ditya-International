@@ -25,9 +25,7 @@ class Company extends Model
         return $this->hasMany(CompanyDemand::class, 'company_id');
     }
 
-
-
-
+    
     public function originCountry(){
         return $this->belongsTo(Country::class, 'country');
     }

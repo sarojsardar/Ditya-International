@@ -87,7 +87,7 @@ class CompanyDemandData{
             $companydemand->languages()->sync($languageIds);
 
         }catch(\Exception $e){
-            dd($e);
+           info("Error While Creating Company Demand ".$e->getMessage());
         }
 
     }

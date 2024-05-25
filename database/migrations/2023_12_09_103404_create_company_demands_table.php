@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('education');
             $table->integer('edu_level');
             $table->longText('demand_letter');
+            $table->enum('status', ['Open', 'Close', 'Completed', 'New', 'Pending', 'Rejected', 'Approved', 'Interview'])->default('Pending'); // Default to 'pending'
             $table->timestamps();
         });
     }
@@ -34,6 +35,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('company_demands');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -19,7 +19,7 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     'sms_url' => env('SMS_URL',),
-    'sms_token' => env('SMS_TOKEN',),
+    'sms_token' => env('SMS_TOKEN'),
 
     /*
     |--------------------------------------------------------------------------
