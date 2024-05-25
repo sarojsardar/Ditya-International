@@ -1,0 +1,43 @@
+First Kura URL anusar Sidebar ko menu kholam la,
+and second kura chai sabai enum field lai yedi proper xa bhane enum ma change garam la such as, jastai gender of demand male female any or othe, but kunai user kamina hunxa so usle arkai halna sakxa k (dheyan ma rakham la )
+Role Add le kaam gareko xaina, Role add ma chai Permission dinu parxa so please Modal ma open na garea new page kholda ramro hola hai tw 
+Staff Ko change pasword rakham la admin lai kina bhane paxi gayera yedi kunai staff birseyu aafno passowrd bhae k garne ok, 
+ad same Companies  Ko change pasword rakham la admin lai kina bhane paxi gayera yedi kunai staff birseyu aafno passowrd bhae k garne ok,
+Website tira malai thah bhayena aaile chai, ma system focus garxu la
+
+
+Manager ma chai Action ma Vew Demand Option show hunu bhanda paila status check garam, ki Demand Open xa ki complete bhayera close xa ki afaile kunai karan bas close garyea xa la, yedi open xa bhane view demand ko opton dim manager lai otherwise demands bhanne option dim jasma sabai demand paros, open, close, completed or aything else
+Deman ko coount rakham la sangai kati ko demand aaxa bhanera
+
+
+Also On receptionist ma chai Action ma Vew Demand Option show hunu bhanda paila status check garam, ki Demand Open xa ki complete bhayera close xa ki afaile kunai karan bas close garyea xa la, yedi open xa bhane view demand ko opton dim manager lai otherwise demands bhanne option dim jasma sabai demand paros, open, close, completed or aything else
+
+Dont use the passport number same if the user is of same countries 
+
+Please Change the status after moved to the medical (Like In Progress Of Medical Checkup) view of the receptionist
+
+
+
+From The Company view
+Please add the option to change the status of the demand such as completed, closed, open and make sure to use it on enum of db
+
+if creating the demand then before creating please chech if any demand of same Company is exist or not 
+
+
+Do Not Use The Approved Candidate for the Company due the term, Approved means theay can work with or within your company, so make it as wishlist, they prefer to hire them
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

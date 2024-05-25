@@ -16,7 +16,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        View::composer('*', function($view){
+            $setting = SiteSetting::first();
+            $webContent = WebContent::first();
+            $services = Services::all();
+            $view->with('setting', $setting);
+            $view->with('webContent', $webContent);
+            $view->with('services', $services);
+            $view->with('setting', $setting);
+        });
     }
 
     /**
@@ -24,13 +32,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $setting = SiteSetting::first();
-        $webContent = WebContent::first();
-        $services = Services::all();
-        View::share('setting', $setting);
-        View::share('webContent', $webContent);
-        View::share('services', $services);
         Paginator::useBootstrap();
-
     }
 }
