@@ -3,9 +3,16 @@
 namespace Database\Seeders;
 
 use App\Enum\UserTypes;
+use App\Models\Category;
+use App\Models\CategoryDetail;
 use App\Models\Company;
+use App\Models\EducationalDocument;
+use App\Models\EducationType;
+use App\Models\Language;
+use App\Models\LanguageDetail;
 use App\Models\User;
 use App\Models\UserDetail;
+use App\Models\UserInformation;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
@@ -35,6 +42,87 @@ class NeededTableSeeder extends Seeder
 
         ]);
         $superAdmin->syncRoles(['CEO']);
+
+
+       
+        $user = User::create([
+            'username' => 'hrditya',
+            'email' => 'hr@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['HR']);
+
+
+        $user = User::create([
+            'username' => 'proditya',
+            'email' => 'pro@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['PRO']);
+
+
+      
+        $user = User::create([
+            'username' => 'receptionistditya',
+            'email' => 'receptionist@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['Receptionist']);
+
+      
+        $user = User::create([
+            'username' => 'documentditya',
+            'email' => 'document@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['Document-Officer']);
+
+
+      
+        $user = User::create([
+            'username' => 'managerditya',
+            'email' => 'manager@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['Manager']);
+
+
+       
+        $user = User::create([
+            'username' => 'medicalditya',
+            'email' => 'medical@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['Medical-Officer']);
+
+      
+        $user = User::create([
+            'username' => 'accountantditya',
+            'email' => 'accountant@dityainternational.com',
+            'password' => Hash::make('password'),
+            'mobile_no' => '',
+            'status' => 1,
+
+        ]);
+        $user->syncRoles(['Accountant']);
 
 
         // for the company/client
@@ -152,6 +240,53 @@ class NeededTableSeeder extends Seeder
                 'has_been_in_accident'=>$faker->boolean(),
             ];
             $userDetails = UserDetail::create($userDetails);
+
+            DB::table('user_information')->truncate();
+            $userInfo = [
+                'user_id'=>$user->id,
+                'first_name'=>$faker->firstName(),
+                'last_name'=>$faker->lastName(),
+                'middle_name'=>null,
+                'contact'=>$faker->numberBetween(111111111, 999989999),
+                'full_address'=>$faker->address(),
+                'profile_picture'=>$faker->imageUrl(),
+            ];
+            $userInfo =  UserInformation::create($userInfo);
+            
+            DB::table('language_details')->truncate();
+            $languages = Language::all();
+            foreach($languages as $language){
+                $languageData = [
+                    'user_id'=>$user->id,
+                    'language_name'=>$language->id,
+                ];
+                $userLanguage = LanguageDetail::create($languageData);
+            }
+
+            DB::table('category_details')->truncate();
+            $categories = Category::all();
+            foreach($categories as $category){
+                $categorydata = [
+                    'user_id'=>$user->id,
+                    'category_id'=>$category->id,
+                ];
+                $categoryDetail = CategoryDetail::create($categorydata);
+            }
+
+
+            DB::table('educational_documents')->truncate();
+            $educationtypes = EducationType::all();
+            foreach($educationtypes as $type){
+                $educationdata = [
+                    'user_id'=>$user->id,
+                    'edu_doc'=>$faker->imageUrl(),
+                    'level'=>$type->name,
+                    'edu_level'=>$type->edu_level,
+                    'school_college_name'=>$faker->name(),
+                    'pass_year'=>Carbon::now()->subYear(5),
+                ];
+                $educationDetail = EducationalDocument::create($educationdata);
+            }
         }
 
         Schema::enableForeignKeyConstraints();

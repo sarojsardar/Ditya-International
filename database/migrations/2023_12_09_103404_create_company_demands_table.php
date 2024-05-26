@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Company;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('company_demands', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('company_id');
+            $table->foreignIdFor(User::class, 'company_id');
             $table->string('demand_code');
             $table->string('quota');
             $table->string('gender');
@@ -25,7 +27,8 @@ return new class extends Migration
             $table->string('education');
             $table->integer('edu_level');
             $table->longText('demand_letter');
-            $table->enum('status', ['Open', 'Close', 'Completed', 'New', 'Pending', 'Rejected', 'Approved', 'Interview'])->default('Pending'); // Default to 'pending'
+            $table->boolean('is_new')->default(true);
+            $table->enum('status', ['Open', 'Close', 'Completed', 'Pending'])->default('Pending'); // Default to 'pending'
             $table->timestamps();
         });
     }

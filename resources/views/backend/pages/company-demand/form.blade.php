@@ -45,9 +45,9 @@ Company Demand Entry | {{ config('app.name') }}
             <div class="col-12 col-lg-8">
                 <div class="card">
                     <div class="card-body">
-
                         @if(@$demand->id)
-                        @method('PUT')
+                            <input type="hidden" name="company_id" value="{{@$demand->company->id}}">
+                            @method('PUT')
                         @endif
 
                         <div class="row">
@@ -239,15 +239,16 @@ Company Demand Entry | {{ config('app.name') }}
                 </div>
             </div>
         </div>
+        <div class="d-flex justify-content-center">
+            <div class="d-grid w-25 mt-10">
+                <button type="submit" class="btn btn-primary waves-effect waves-light">
+                    Submit
+                </button>
+            </div>
+        </div>
     </form>
 
-    <div class="d-flex justify-content-center">
-        <div class="d-grid w-25 mt-10">
-            <button type="submit" class="btn btn-primary waves-effect waves-light">
-                Submit
-            </button>
-        </div>
-    </div>
+   
 
 </div>
 

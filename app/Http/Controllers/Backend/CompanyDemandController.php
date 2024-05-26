@@ -2,38 +2,41 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Enum\UserTypes;
-use App\Jobs\SendInterviewSms;
-use App\Jobs\SendReinterviewSms;
-use App\Models\Comment;
-use App\Models\CompanyCandidate;
-use App\Models\EducationType;
-use App\Models\Gender;
-use App\Models\Interview;
-use App\Models\Language;
-use App\Models\SendCode;
 use App\Models\User;
 use App\Models\Year;
-use Haruncpi\LaravelIdGenerator\IdGenerator;
+use App\Models\Gender;
+use App\Enum\UserTypes;
+use App\Models\Comment;
+use App\Models\Company;
+use App\Models\Language;
+use App\Models\SendCode;
+use App\Models\Interview;
 use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
+use App\Models\EducationType;
+use App\Jobs\SendInterviewSms;
+use App\Jobs\SendReinterviewSms;
+use App\Models\CompanyCandidate;
 use Yajra\DataTables\DataTables;
 use App\Data\company\CompanyData;
 use App\Data\Country\CountryData;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Data\CompanyDemand\CompanyDemandData;
 
 class CompanyDemandController extends Controller
 {
 
     public function index(Request $request){
-
-        $demands = (new CompanyDemandData())->demandList();
-
+        
+        $user = Auth::user();
+        $userId = $user->id;
+        $companyDemand =  CompanyDemand::where('company_id', $userId)->orderBy('created_at', 'desc');
+        
         if($request->ajax()){
-
-            return DataTables::of($demands)
+            return DataTables::of($companyDemand)
             ->addIndexColumn()
 
             ->addColumn('age_from', function($row){
@@ -118,6 +121,15 @@ class CompanyDemandController extends Controller
 
     public function create(){
        //   dd($request->all());
+
+
+        $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
+        if($demand){
+            session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
+            return redirect()->route('company-demand.index');
+        }
+
+
         $genders = Gender::all();
         $languages = Language::all();
         $educations = EducationType::all();
@@ -147,7 +159,11 @@ class CompanyDemandController extends Controller
 
     public function store(Request $request){
 
-
+        $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
+        if($demand){
+            session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
+            return redirect()->route('company-demand.index');
+        }
         DB::beginTransaction();
         try{
 
@@ -174,20 +190,19 @@ class CompanyDemandController extends Controller
 
         // Validate the rest of the request data
         $request->validate([
-            'company_name' => 'required|unique:companies,name,'.$company->id,
-            'company_email' => 'required|email|unique:users,email,'.$company->user_id,
-            'company_address' => 'required',
-            'country' => 'required',
-            'office_rate' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/',
+            // 'company_name' => 'required|unique:companies,name,'.$company->id,
+            // 'company_email' => 'required|email|unique:users,email,'.$company->user_id,
+            // 'company_address' => 'required',
+            // 'country' => 'required',
+            // 'office_rate' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/',
             'quota' => 'required',
-            'quota_value' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/',
-            'company_logo' => 'sometimes|required|mimes:jpg,jpeg,png,bmp,tiff|max:4096',
-            'demand_letter.*' => 'sometimes|required|image|mimes:jpg,jpeg,png,gif|max:4048',
+            // 'quota_value' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/',
+            // 'company_logo' => 'sometimes|required|mimes:jpg,jpeg,png,bmp,tiff|max:4096',
+            // 'demand_letter.*' => 'sometimes|required|image|mimes:jpg,jpeg,png,gif|max:4048',
         ]);
 
         DB::beginTransaction();
-
-        try {
+        // try {
             // It's safer to use the validated company rather than fetching again
             // $company = (new CompanyData())->getCompany($request->company_id);
 
@@ -199,29 +214,29 @@ class CompanyDemandController extends Controller
             }
 
             // Update company and demand data
-            (new CompanyData($request))->update($company->id);
+            // (new CompanyData($request))->update($company->id);
             (new CompanyDemandData($request))->update($id);
 
             // Assuming you might want to refresh the $demand after updates
             $demand->refresh();
 
-            foreach($demand->candidates as $candidate){
-                if($candidate->invoice){
-                    $candidate->invoice->update([
-                        'total_payment' => $request->office_rate
-                    ]);
-                }
-            }
+            // foreach($demand->candidates as $candidate){
+            //     if($candidate->invoice){
+            //         $candidate->invoice->update([
+            //             'total_payment' => $request->office_rate
+            //         ]);
+            //     }
+            // }
 
             DB::commit();
             return redirect()->route('company-demand.index')->with('success', 'Demand updated successfully');
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            // Consider logging the exception if you aren't already
-            \Log::error($e->getMessage());
-            return back()->with('error', 'An error occurred while updating the demand.');
-        }
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+        //     // Consider logging the exception if you aren't already
+        //     \Log::error($e->getMessage());
+        //     return back()->with('error', 'An error occurred while updating the demand.');
+        // }
     }
 
 

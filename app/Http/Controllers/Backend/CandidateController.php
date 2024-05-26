@@ -118,6 +118,7 @@ class CandidateController extends Controller
             ->where('company_id', $authUserId)
             ->first();
 
+            
         if (!$demand) {
             if ($request->ajax()) {
                 // For AJAX requests, return an empty set to DataTables
@@ -155,8 +156,10 @@ class CandidateController extends Controller
                         ->where('total_work_experience', '>=', $demand->experience_year)
                         ->whereBetween('age', [$demand->age_from, $demand->age_to]);
                 })
-                ->whereHas('educations', function ($query) use ($demand) {
-                    $query->where('edu_level', '>=', $demand->edu_level);
+                ->when(($demand->edu_level > 0), function($query) use($demand){
+                    $query->whereHas('educations', function ($query) use ($demand) {
+                        $query->where('edu_level', '>=', $demand->edu_level);
+                    });
                 })
                 ->get();
         } else {
@@ -173,7 +176,7 @@ class CandidateController extends Controller
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
 
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
-            $userLanguageIds = $user->languages->pluck('id')->all();
+            $userLanguageIds = ($user->languages) ? (count($user->languages) > 0 ? ($user->languages->pluck('id')->all()) : []) : [];
 
             $userCategoryIds = DB::table('category_details')
                 ->where('user_id', $user->id) // Assuming each user has a unique 'id'
