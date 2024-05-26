@@ -210,7 +210,7 @@
         </table>
 
         <div class="profile-img">
-            <img src="{{url('/storage/uploads/passport-photos/'.$userDetails->uploadPhoto->passport_photo)}}" alt="images">
+            <img src="{{url('/storage/uploads/passport-photos/'.$userDetails?->uploadPhoto?->passport_photo)}}" alt="images">
         </div>
     </div>
     <div class="personal-details">
@@ -296,19 +296,19 @@
                             <tbody>
                                 <tr>
                                     <td>Passport No.</td>
-                                    <td>{{ $userDetails->passportDetail->passport_number }}</td>
+                                    <td>{{ $userDetails?->passportDetail?->passport_number }}</td>
                                 </tr>
                                 <tr>
                                     <td>Date of Issue</td>
-                                    <td>{{ $userDetails->passportDetail->passport_issue_date}}</td>
+                                    <td>{{ $userDetails?->passportDetail?->passport_issue_date}}</td>
                                 </tr>
                                 <tr>
                                     <td>Date of Expiry</td>
-                                    <td>{{ $userDetails->passportDetail->expiry_date }}</td>
+                                    <td>{{ $userDetails?->passportDetail?->expiry_date }}</td>
                                 </tr>
                                 <tr>
                                     <td>Place of Issue</td>
-                                    <td>{{ $userDetails->passportDetail->issue_place }}</td>
+                                    <td>{{ $userDetails?->passportDetail?->issue_place }}</td>
                                 </tr>
                                 <tr>
                                     <td>Age</td>

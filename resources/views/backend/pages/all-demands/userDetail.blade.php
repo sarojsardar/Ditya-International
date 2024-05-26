@@ -56,7 +56,7 @@
                 <div class="card mb-4">
                     <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-4">
                         <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                            <img src="{{url('/storage/uploads/passport-photos/'.$userDetails->uploadPhoto->passport_photo)}}"
+                            <img src="{{url('/storage/uploads/passport-photos/'.$userDetails?->uploadPhoto?->passport_photo)}}"
                                  alt="user image" height="80" width="100"
                                  class="d-block ms-0 ms-sm-4 rounded  img-fluid" />
                         </div>
@@ -74,7 +74,7 @@
                                         </li>
                                         <li class="list-inline-item">
                                             <i class="mdi mdi-map-marker-outline me-1 mdi-20px"></i
-                                            ><span class="fw-medium">{{$userDetails->userDetail->permanent_address}}</span>
+                                            ><span class="fw-medium">{{$userDetails?->userDetail->permanent_address}}</span>
                                         </li>
                                         <li class="list-inline-item">
                                             <i class="mdi mdi-calendar-blank-outline me-1 mdi-20px"></i
@@ -201,24 +201,24 @@
                             <li class="d-flex align-items-center mb-3">
                                 <span class="fw-bold me-2">Passport Image:</span>
                                 <div>
-                                    <img src="{{asset('storage/uploads/passport-images/'.$userDetails->passportDetail->passport_image)}}" class="img-fluid lightbox-trigger" style="width:auto; max-height:100px; cursor:pointer;">
+                                    <img src="{{asset('storage/uploads/passport-images/'.$userDetails?->passportDetail?->passport_image)}}" class="img-fluid lightbox-trigger" style="width:auto; max-height:100px; cursor:pointer;">
                                 </div>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <span class="fw-bold me-2">Passport Number:</span>
-                                <span>{{$userDetails->passportDetail->passport_number}}</span>
+                                <span>{{$userDetails?->passportDetail?->passport_number}}</span>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <span class="fw-bold me-2">Issue Date:</span>
-                                <span>{{$userDetails->passportDetail->passport_issue_date}}</span>
+                                <span>{{$userDetails?->passportDetail?->passport_issue_date}}</span>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <span class="fw-bold me-2">Issue Place:</span>
-                                <span>{{$userDetails->passportDetail->issue_place}}</span>
+                                <span>{{$userDetails?->passportDetail?->issue_place}}</span>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <span class="fw-bold me-2">Expiry Date:</span>
-                                <span>{{$userDetails->passportDetail->expiry_date}}</span>
+                                <span>{{$userDetails?->passportDetail?->expiry_date}}</span>
                             </li>
                         </ul>
                     </div>
@@ -267,7 +267,7 @@
                                         <p class="mb-2">Details : {{ $exp->description }}</p>
                                         <div class="d-flex flex-wrap">
                                             <div class="avatar me-3">
-                                                <img src="{{url('/storage/uploads/passport-photos/'.$userDetails->uploadPhoto->passport_photo)}}" alt="Avatar" class="rounded-circle" />
+                                                <img src="{{url('/storage/uploads/passport-photos/'.$userDetails?->uploadPhoto?->passport_photo)}}" alt="Avatar" class="rounded-circle" />
                                             </div>
                                             <div>
                                                 <h6 class="mb-0">Company : {{ $exp->company_name }}</h6>
@@ -301,7 +301,7 @@
                                     <li class="mb-3">
                                         <div class="d-flex align-items-center">
                                             <div class="me-3">
-                                                <img src="{{url('/storage/uploads/passport-photos/'.$userDetails->uploadPhoto->passport_photo)}}" alt="Passport Size Photo" class="img-fluid rounded-circle lightbox-trigger" style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
+                                                <img src="{{url('/storage/uploads/passport-photos/'.$userDetails?->uploadPhoto?->passport_photo)}}" alt="Passport Size Photo" class="img-fluid rounded-circle lightbox-trigger" style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
                                             </div>
                                             <h6 class="mb-0">Passport Size Photo</h6>
                                         </div>
@@ -309,7 +309,7 @@
                                     <li class="mb-3">
                                         <div class="d-flex align-items-center">
                                             <div class="me-3">
-                                                <img src="{{url('/storage/uploads/full-photos/'.$userDetails->uploadPhoto->full_photo)}}" alt="Full Size Photo" class="img-fluid rounded-circle lightbox-trigger" style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
+                                                <img src="{{url('/storage/uploads/full-photos/'.$userDetails?->uploadPhoto?->full_photo)}}" alt="Full Size Photo" class="img-fluid rounded-circle lightbox-trigger" style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
                                             </div>
                                             <h6 class="mb-0">Full Size Photo</h6>
                                         </div>
@@ -335,7 +335,7 @@
                                         <script>
                                             document.addEventListener('DOMContentLoaded', (event) => {
                                                 // Set the iframe src attribute dynamically
-                                                document.getElementById('pdfViewer').src = "{{ asset('storage/uploads/resume-files/'.$userDetails->resumeDetail->resume_file) }}";
+                                                document.getElementById('pdfViewer').src = "{{ asset('storage/uploads/resume-files/'.$userDetails?->resumeDetail?->resume_file) }}";
                                             });
                                         </script>
 
@@ -369,13 +369,13 @@
                                         <script>
                                             document.addEventListener('DOMContentLoaded', (event) => {
                                                 // Set the iframe src attribute dynamically
-                                                document.getElementById('pdfViewer1').src = "{{ asset('storage/uploads/edu-doc/'.$userDetails->educationalQualification->edu_doc) }}";
+                                                document.getElementById('pdfViewer1').src = "{{ asset('storage/uploads/edu-doc/'.$userDetails?->educationalQualification?->edu_doc) }}";
                                             });
                                         </script>
                                     </td>
-                                    <td style="vertical-align: top;">{{ ucfirst($userDetails->educationalQualification->level) }}</td>
-                                    <td style="vertical-align: top;">{{ ucfirst($userDetails->educationalQualification->school_college_name) }}</td>
-                                    <td style="vertical-align: top;">{{ ucfirst($userDetails->educationalQualification->pass_year) }}</td>
+                                    <td style="vertical-align: top;">{{ ucfirst($userDetails?->educationalQualification?->level) }}</td>
+                                    <td style="vertical-align: top;">{{ ucfirst($userDetails?->educationalQualification?->school_college_name) }}</td>
+                                    <td style="vertical-align: top;">{{ ucfirst($userDetails?->educationalQualification?->pass_year) }}</td>
                                 </tr>
                                 </tbody>
                             </table>

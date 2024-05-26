@@ -262,12 +262,16 @@ class CompanyDemandController extends Controller
             $demand->demand_status = 'New';
             $demand->save();
 
+            
             CompanyCandidate::create([
                 'user_id' => $id,
                 'company_id' => $request->company_id,
                 'demand_id' => $request->demand_id,
                 'demand_status' => $request->demand_status
             ]);
+
+
+            // new code added for the notification
 
             return redirect()->route('approved-demand.index')->with('success', 'Status updated successfully.');
         } else if (in_array($request->input('demand_status'), ['Pending', 'Rejected'])) {
