@@ -202,6 +202,50 @@ class NeededTableSeeder extends Seeder
                 'has_been_in_accident'=>$faker->boolean(),
             ];
             $userDetails = UserDetail::create($userDetails);
+
+
+            $userInfo = [
+                'user_id'=>$user->id,
+                'first_name'=>$faker->firstName(),
+                'last_name'=>$faker->lastName(),
+                'middle_name'=>null,
+                'contact'=>$faker->numberBetween(111111111, 999989999),
+                'full_address'=>$faker->address(),
+                'profile_picture'=>$faker->imageUrl(),
+            ];
+            $userInfo =  UserInformation::create($userInfo);
+            
+            $languages = Language::all();
+            foreach($languages as $language){
+                $languageData = [
+                    'user_id'=>$user->id,
+                    'language_name'=>$language->id,
+                ];
+                $userLanguage = LanguageDetail::create($languageData);
+            }
+
+            $categories = Category::all();
+            foreach($categories as $category){
+                $categorydata = [
+                    'user_id'=>$user->id,
+                    'category_id'=>$category->id,
+                ];
+                $categoryDetail = CategoryDetail::create($categorydata);
+            }
+
+
+            $educationtypes = EducationType::all();
+            foreach($educationtypes as $type){
+                $educationdata = [
+                    'user_id'=>$user->id,
+                    'edu_doc'=>$faker->imageUrl(),
+                    'level'=>$type->name,
+                    'edu_level'=>$type->edu_level,
+                    'school_college_name'=>$faker->name(),
+                    'pass_year'=>Carbon::now()->subYear(5),
+                ];
+                $educationDetail = EducationalDocument::create($educationdata);
+            }
         }
 
 

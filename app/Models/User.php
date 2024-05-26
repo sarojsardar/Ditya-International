@@ -54,7 +54,7 @@ class User extends Authenticatable
     }
 
     public function languages(){
-        return $this->hasOne(LanguageDetail::class, 'user_id');
+        return $this->hasMany(LanguageDetail::class, 'user_id');
     }
 
     public function categories(){

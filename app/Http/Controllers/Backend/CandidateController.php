@@ -34,7 +34,7 @@ class CandidateController extends Controller
             abort(404, 'Demand not found');
         }
 
-        $demands = User::where('user_type', UserTypes::CANDIDATE)
+        $demands = User::where('user_type', '=', UserTypes::CANDIDATE)
             ->whereHas('userDetail', function ($query) use ($demand) {
                 $query->where('gender', $demand->gender)
                     ->where('height', '>=', $demand->height)
@@ -43,7 +43,6 @@ class CandidateController extends Controller
                     ->whereBetween('age', [$demand->age_from, $demand->age_to]); // Filter by DOB within the specified age range in the user details
             })
             ->get();
-
 
         if($request->ajax()){
             return DataTables::of($demands)
@@ -174,10 +173,8 @@ class CandidateController extends Controller
         $userId = $authUserId;
 
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
-
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
             $userLanguageIds = ($user->languages) ? (count($user->languages) > 0 ? ($user->languages->pluck('id')->all()) : []) : [];
-
             $userCategoryIds = DB::table('category_details')
                 ->where('user_id', $user->id) // Assuming each user has a unique 'id'
                 ->pluck('category_id')
