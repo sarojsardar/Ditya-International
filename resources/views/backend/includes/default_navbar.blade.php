@@ -65,16 +65,16 @@
                                 <div class="flex-shrink-0 me-2">
                                     <div class="avatar avatar-online">
                                         @role(['Company'])
-                                        @if (@auth('web')->user()->companyInfo->logo)
-                                        <img src="{{ url('/storage/uploads/company-logo/' . auth('web')->user()->companyInfo->logo) }}"
+                                        @if (@auth('web')->user()?->companyInfo?->logo)
+                                        <img src="{{ url('/storage/uploads/company-logo/' . auth('web')->user()?->companyInfo?->logo) }}"
                                             alt="user" class="w-px-40 h-auto rounded-circle">
                                         @else
                                         <img src="{{ asset('no-profile.jpg') }}" alt="user"
                                             class="w-px-40 h-auto rounded-circle">
                                         @endif
                                         @else
-                                        @if (@auth('web')->user()->userInfo->profile_picture)
-                                        <img src="{{ url('/storage/uploads/staff-profiles/' . auth('web')->user()->userInfo->profile_picture) }}"
+                                        @if (@auth('web')->user()?->userInfo?->profile_picture)
+                                        <img src="{{ url('/storage/uploads/staff-profiles/' . auth('web')->user()?->userInfo?->profile_picture) }}"
                                             alt="user" class="w-px-40 h-auto rounded-circle">
                                         @else
                                         <img src="{{ asset('no-profile.jpg') }}" alt="user"
@@ -93,7 +93,7 @@
                                         @if(auth('web')->user()->hasRole(['CEO']))
                                         CEO
                                         @else
-                                        {!! \Illuminate\Support\Str::limit(auth('web')->user()->userInfo->first_name,
+                                        {!! \Illuminate\Support\Str::limit(auth('web')->user()?->userInfo?->first_name,
                                         10, $end = '...') !!}
                                         @endif
                                         @endif

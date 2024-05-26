@@ -123,11 +123,11 @@ class CompanyDemandController extends Controller
        //   dd($request->all());
 
 
-        $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
-        if($demand){
-            session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
-            return redirect()->route('company-demand.index');
-        }
+        // $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
+        // if($demand){
+        //     session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
+        //     return redirect()->route('company-demand.index');
+        // }
 
 
         $genders = Gender::all();
