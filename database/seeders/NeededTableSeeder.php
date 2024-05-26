@@ -160,12 +160,13 @@ class NeededTableSeeder extends Seeder
             ]);
         }
 
-
-
-
-
-
         DB::table('user_details')->truncate();
+        DB::table('user_information')->truncate();
+        DB::table('language_details')->truncate();
+        DB::table('category_details')->truncate();
+        DB::table('educational_documents')->truncate();
+
+
         // for the candidate
         for($i=1; $i<=10; $i++){
             $email = $faker->email();
@@ -241,7 +242,6 @@ class NeededTableSeeder extends Seeder
             ];
             $userDetails = UserDetail::create($userDetails);
 
-            DB::table('user_information')->truncate();
             $userInfo = [
                 'user_id'=>$user->id,
                 'first_name'=>$faker->firstName(),
@@ -253,7 +253,6 @@ class NeededTableSeeder extends Seeder
             ];
             $userInfo =  UserInformation::create($userInfo);
             
-            DB::table('language_details')->truncate();
             $languages = Language::all();
             foreach($languages as $language){
                 $languageData = [
@@ -263,7 +262,6 @@ class NeededTableSeeder extends Seeder
                 $userLanguage = LanguageDetail::create($languageData);
             }
 
-            DB::table('category_details')->truncate();
             $categories = Category::all();
             foreach($categories as $category){
                 $categorydata = [
@@ -274,7 +272,6 @@ class NeededTableSeeder extends Seeder
             }
 
 
-            DB::table('educational_documents')->truncate();
             $educationtypes = EducationType::all();
             foreach($educationtypes as $type){
                 $educationdata = [
