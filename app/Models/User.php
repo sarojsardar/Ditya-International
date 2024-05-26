@@ -54,11 +54,20 @@ class User extends Authenticatable
     }
 
     public function languages(){
-        return $this->hasMany(LanguageDetail::class, 'user_id');
+        return $this->hasOne(LanguageDetail::class, 'user_id');
     }
 
     public function categories(){
         return $this->hasOne(CategoryDetail::class, 'category_id');
+    }
+
+
+    // New developed for the many to many relationship with pivot table
+    public function manyCategories(){
+        return $this->belongsToMany(Category::class, 'category_details', 'user_id', 'category_id');
+    }
+    public function manyLanguages(){
+        return $this->belongsToMany(Language::class, 'language_details', 'user_id', 'language_name');
     }
 
     public function educations(){
