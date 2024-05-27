@@ -23,9 +23,7 @@ class CompanyData{
     }
 
     public function companyList(){
-
         return Company::with('categories')->select('companies.*')->latest();
-
     }
 
 

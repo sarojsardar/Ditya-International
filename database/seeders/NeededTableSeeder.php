@@ -165,8 +165,7 @@ class NeededTableSeeder extends Seeder
         DB::table('language_details')->truncate();
         DB::table('category_details')->truncate();
         DB::table('educational_documents')->truncate();
-
-
+        
         // for the candidate
         for($i=1; $i<=10; $i++){
             $email = $faker->email();

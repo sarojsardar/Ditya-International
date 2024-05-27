@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class NotificationAction
 {
+    protected $title;
     protected $web_content;
     protected $mobile_content;
     protected $is_auto;
@@ -17,6 +18,7 @@ class NotificationAction
     protected $send_to;
     protected $go_to_url;
     function __construct(
+        $title,
         $web_content=null, 
         $mobile_content=null, 
         $is_auto=true,
@@ -28,6 +30,7 @@ class NotificationAction
         $go_to_url = "#"
     )
     {
+        $this->title = $title;
         $this->web_content = $web_content;
         $this->mobile_content = $mobile_content;
         $this->is_auto = $is_auto;
@@ -61,6 +64,7 @@ class NotificationAction
         try {
             if($this->web_content || $this->mobile_content){
                 $notification = Notification::create([
+                    'title'=>$this->title,
                     'generated_by'=>$this->generated_by,
                     'generated_id'=>$this->generated_id,
                     'generated_to'=>$this->generated_to,
@@ -75,8 +79,7 @@ class NotificationAction
                 $this->pushToSms();
                 $this->pushToEmail();
                 $this->pushToSystem();
-            }
-            
+            }   
         } catch (\Throwable $th) {
             info("Error While Notifying");
             info($th->getMessage());

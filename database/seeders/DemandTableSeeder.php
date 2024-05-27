@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\CompanyDemand;
+use App\Models\Language;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +22,14 @@ class DemandTableSeeder extends Seeder
         $faker = Factory::create();
         Schema::disableForeignKeyConstraints();
         DB::table('company_demands')->truncate();
+        DB::table('company_demand_language')->truncate();
+        $languages = Language::all();
         $companies = Company::all();
         foreach($companies as $index=>$company){
             if($index <= 4){
                 $demandCode = IdGenerator::generate(['table' => 'company_demands', 'field' => 'demand_code', 'length' => 10, 'prefix' =>'DMD-']);
                 $demandData = [
-                    'company_id'=>$company->user->id,
+                    'company_id'=>$company->id,
                     'demand_code'=>$demandCode,
                     'quota'=>$faker->numberBetween(11, 99),
                     'gender'=>'male',
@@ -36,19 +39,25 @@ class DemandTableSeeder extends Seeder
                     'weight'=>55,
                     'experience_year'=>0,
                     'education'=>'see',
-                    'edu_level'=>10,
+                    'edu_level'=>1,
                     'demand_letter'=>$faker->imageUrl(),
                     'is_new'=>true,
                     'status'=>'Pending',
                 ];
 
-                CompanyDemand::create($demandData);
+                $companyDemand = CompanyDemand::create($demandData);
+                foreach($languages as $language){
+                    DB::table('company_demand_language')->insert([
+                        'company_demand_id'=>$companyDemand->id,
+                        'language_id'=>$language->id,
+                    ]);
+                }
             }
 
             if($index > 4){
                 $demandCode = IdGenerator::generate(['table' => 'company_demands', 'field' => 'demand_code', 'length' => 10, 'prefix' =>'DMD-']);
                 $demandData = [
-                    'company_id'=>$company->user->id,
+                    'company_id'=>$company->id,
                     'demand_code'=>$demandCode,
                     'quota'=>$faker->numberBetween(11, 99),
                     'gender'=>'female',
@@ -58,12 +67,19 @@ class DemandTableSeeder extends Seeder
                     'weight'=>55,
                     'experience_year'=>0,
                     'education'=>'see',
-                    'edu_level'=>10,
+                    'edu_level'=>1,
                     'demand_letter'=>$faker->imageUrl(),
                     'is_new'=>true,
                     'status'=>'Pending',
                 ];
-                CompanyDemand::create($demandData);
+                $companyDemand = CompanyDemand::create($demandData);
+
+                foreach($languages as $language){
+                    DB::table('company_demand_language')->insert([
+                        'company_demand_id'=>$companyDemand->id,
+                        'language_id'=>$language->id,
+                    ]);
+                }
             }
 
            

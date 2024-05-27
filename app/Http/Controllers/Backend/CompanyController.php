@@ -2,26 +2,39 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Helper\ImageUploadHelper;
-use App\Models\Category;
+use App\Data\Candidate\CompanyCandidateData;
 use App\Models\Company;
+use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Models\CompanyDemand;
 use Yajra\DataTables\DataTables;
 use App\Data\company\CompanyData;
 use App\Data\Country\CountryData;
+use App\Helper\ImageUploadHelper;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class CompanyController extends Controller
 {
     public function index(Request $request){
-
-        $companies = (new CompanyData())->companyList();
-
         if($request->ajax()){
+            $companies = (new CompanyData())->companyList();
             return DataTables::of($companies)
                 ->addIndexColumn()
+                ->addColumn('current_quota', function($row){
+                    return @$row->user->email;
+                })
+                ->addColumn('wished_list', function($row){
+                    $companyDemand = CompanyDemand::where('company_id', $row->id)
+                    ->whereIn('status', ['Open', 'Pending'])
+                    ->latest()->first();
+                    $wishList = [];
+                    if($companyDemand){
+                        $wishList = (new CompanyCandidateData)->getWishListCandidate($companyDemand->demand_code);
+                    }
+                    return count($wishList).' '.$row->id;
+                })
                 ->addColumn('logo', function($row){
                     $url = url('/storage/uploads/company-logo/'. $row->logo);
                     return "<img src='{$url}' alt='company logo' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";

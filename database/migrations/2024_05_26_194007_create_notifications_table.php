@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('generated_id')->default(0)->nullable()->comment('this is may be generated model id or null or 0');
             $table->string('generated_to')->default('All')->comment('this may be model or system only')->nullable();
             $table->integer('generated_to_id')->default(0)->comment('this is may be generated model id or null or 0');
+            $table->string('title');
             $table->longText('web_content')->nullable();
             $table->longText('mobile_content')->nullable();
             $table->boolean('is_auto');
