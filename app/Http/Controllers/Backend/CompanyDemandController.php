@@ -96,9 +96,7 @@ class CompanyDemandController extends Controller
 
     public function managerIndex($companyId){
 
-
         $demands =  CompanyDemand::where('company_id', $companyId)->orderBy('created_at', 'desc')->get();
-
         return view('backend.pages.all-demands.managerIndex', compact('demands'));
     }
 
@@ -391,7 +389,11 @@ class CompanyDemandController extends Controller
     public function updateStatusAndNotify(Request $request)
     {
         // Extract user IDs where user type is CANDIDATE
-        $userIds = User::where('user_type', UserTypes::CANDIDATE)->pluck('id')->toArray();
+        // new developed to get only selected user id
+        $userIds = collect($request->selectedCandidates ?? [])->filter(function($row){
+            return $row !== "off";
+        })->toArray();
+
 
         // Formatting the interview time
         $interviewTime = $request->input('interview_time');
@@ -408,15 +410,67 @@ class CompanyDemandController extends Controller
             ->first();
 
         $companyName = optional($companyCandidate->company)->name ?? '';
-
+        $company = $companyCandidate->company;
+        $companyDemand = CompanyDemand::where('company_id', $company->id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
         foreach ($userIds as $userId) {
             $interview = Interview::updateOrCreate(
-                ['user_id' => $userId],
-                ['interview_date' => $newInterviewDate, 'interview_time' => $newInterviewTime, 'interview_venue' => $newInterviewVenue]
+                [
+                    'user_id' => $userId,
+                    'demand_code'=>$companyDemand->demand_code,
+                    'demand_id'=>$companyDemand->id,
+                ],
+                [
+                    'interview_date' => $newInterviewDate, 
+                    'interview_time' => $newInterviewTime, 
+                    'interview_venue' => $newInterviewVenue,
+                ]
             );
-
             $user = User::find($userId);
             if ($user) {
+                // new developed for the notification
+                try {
+                    if ($interview->wasRecentlyCreated) {
+                        $title = "Your Interview date and time has been Scheduled";
+                    }else{
+                        $title = "Your Interview date and time has been Rescheduled";
+                    }
+                    $generated_by = get_class(auth()->user());
+                    $generated_id = auth()->user()->id;
+                    // This may be change according to the candidate model 
+                    $generated_to = get_class($user);
+                    $generated_to_id = $user->id;
+                    $go_to_url = "#";
+                    // in the below the href must be changed;
+                    $web_content = "Namaste!\n" .
+                    "We'd like to invite you for interview :\n" .
+                    "Date: $interview->interview_date\n" .
+                    "Time: $$interview->interview_time\n" .
+                    "Venue: $$interview->interview_venue\n" .
+                    "Company Name: $companyName";
+
+                    $mobile_content =  "Namaste!\n" .
+                    "We'd like to invite you for interview :\n" .
+                    "Date: $interview->interview_date\n" .
+                    "Time: $$interview->interview_time\n" .
+                    "Venue: $$interview->interview_venue\n" .
+                    "Company Name: $companyName";
+                    $is_auto = true;
+                    $send_to = 1;
+                    (new NotificationAction(
+                        $title,
+                        $web_content,
+                        $mobile_content,
+                        $is_auto,
+                        $generated_by,
+                        $generated_id,
+                        $generated_to,
+                        $generated_to_id,
+                        $send_to,
+                        $go_to_url,
+                        ))->pushNotification();
+                } catch (\Throwable $th) {
+                    info("Error On Push Notification :" .$th->getMessage());
+                }
                 if ($interview->wasRecentlyCreated) {
                     SendInterviewSms::dispatch($user->mobile_no, $interview->interview_date, $interview->interview_time, $interview->interview_venue, $companyName);
                 } else {
@@ -424,7 +478,6 @@ class CompanyDemandController extends Controller
                 }
             }
         }
-
         return back()->with('success', 'Selected users updated and notified successfully.');
     }
 

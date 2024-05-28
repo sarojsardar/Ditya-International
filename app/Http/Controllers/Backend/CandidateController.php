@@ -566,24 +566,19 @@ class CandidateController extends Controller
     public function managerApprovedDemandCandidates(Request $request, $demandCode)
     {
         $companyDemand = CompanyDemand::where('demand_code', $demandCode)->firstOrFail(); // Directly abort if not found
-
         $demandId = $companyDemand->id; // Use this directly
+        // Set current demand in session
+        // session(['currentDemand' => $filteredUsers]);
 
-        $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
+        if ($request->ajax()) {
+            
+            $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
             ->whereHas('candidateCompany', function ($query) {
                 $query->where('demand_status', UserDemandStatus::Approved);
             })
             ->whereHas('candidateCompany', function ($query) use ($demandId) {
                 $query->where('demand_id', $demandId);
-            })
-            ->get();
-        // Set current demand in session
-        session(['currentDemand' => $filteredUsers]);
-
-        if ($request->ajax()) {
-            if ($filteredUsers->isEmpty()) {
-                return DataTables::of([])->make(true);
-            }
+            });
 
             return DataTables::of($filteredUsers)
                 ->addIndexColumn()

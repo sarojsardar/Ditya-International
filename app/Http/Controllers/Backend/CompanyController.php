@@ -23,7 +23,13 @@ class CompanyController extends Controller
             return DataTables::of($companies)
                 ->addIndexColumn()
                 ->addColumn('current_quota', function($row){
-                    return @$row->user->email;
+                    // this may update after the complete of all process
+                    $completed = 0;
+                    $companyDemand = CompanyDemand::where('company_id', $row->id)
+                    ->whereIn('status', ['Open', 'Pending'])
+                    ->latest()->first();
+                    return $completed .'/'.$companyDemand->quota;
+
                 })
                 ->addColumn('wished_list', function($row){
                     $companyDemand = CompanyDemand::where('company_id', $row->id)
@@ -33,7 +39,8 @@ class CompanyController extends Controller
                     if($companyDemand){
                         $wishList = (new CompanyCandidateData)->getWishListCandidate($companyDemand->demand_code);
                     }
-                    return count($wishList).' '.$row->id;
+                    $infoUrl = route('manager-demand.index', $row->id);
+                    return '<a href="'.$infoUrl.'" target="_blank">'.count($wishList).'</a>';
                 })
                 ->addColumn('logo', function($row){
                     $url = url('/storage/uploads/company-logo/'. $row->logo);
@@ -49,7 +56,7 @@ class CompanyController extends Controller
                     return @$row->user->email;
                 })
                 ->addColumn('action', function($row){
-                    $infoUrl = route('manager-demand.index', $row->user_id);
+                    $infoUrl = route('manager-demand.index', $row->id);
 
                     $editUrl = route('company.edit', $row->id);
 
@@ -63,7 +70,7 @@ class CompanyController extends Controller
                         </div>";
                     }
                 })
-                ->rawColumns(['DT_RowIndex', 'logo', 'action'])
+                ->rawColumns(['DT_RowIndex', 'logo', 'action', 'wished_list'])
                 ->make(true);
         }
 

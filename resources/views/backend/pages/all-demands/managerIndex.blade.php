@@ -11,37 +11,22 @@
             <div class="card-widget-separator-wrapper">
                 <div class="card-body card-widget-separator">
                     <div class="row gy-4 gy-sm-1">
-                        <div class="col-sm-6 col-lg-3">
+                        <div class="col-sm-12 col-lg-3">
                             <div class="d-flex justify-content-end align-items-start card-widget-1 border-end pb-3 pb-sm-0">
-                                <div>
-                                    @forelse($demands as $demand)
-                                        @isset($demand->company_id)
-                                            <a href="{{ route('manager-demand.index', $demand->company_id) }}" class="btn {{ request()->routeIs('manager-demand.index') ? 'btn-primary' : 'btn-default' }} btn-sm waves-effect waves-light">Approved Candidates</a>
-                                        @endisset
-                                    @empty
-                                        <p>No demands available.</p> <!-- Consider showing a message or a different link when there are no demands -->
-                                    @endforelse
-                                </div>
-
+                              
+                                @forelse($demands as $demand)
+                                    @isset($demand->company_id)
+                                        <input type="hidden" value="" id="data_type" name="data_type">
+                                        <a href="#" data-type="all" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-primary waves-effect waves-light">All Candidate</a>
+                                        <a href="#" data-type="scheduled" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-info waves-effect waves-light">On Interview</a>
+                                        <a href="#" data-type="selected" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-secondary waves-effect waves-light">Interview Selected</a>
+                                    @endisset
+                                @empty
+                                    <p>No demands available.</p> <!-- Consider showing a message or a different link when there are no demands -->
+                                @endforelse
+                            
                             </div>
                             <hr class="d-none d-sm-block d-lg-none me-4">
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="d-flex justify-content-start align-items-start card-widget-2 border-end pb-3 pb-sm-0">
-                                <div>
-                                    @forelse($demands as $demand)
-                                        @isset($demand->company_id)
-                                            <a href="{{ route('manager-interview-demand.index', $demand->company_id) }}" class="btn {{ request()->routeIs('manager-demand.index') ? 'btn-default' : 'btn-primary' }} btn-sm waves-effect waves-light">Interview Selected Candidates</a>
-                                        @endisset
-                                    @empty
-                                        <!-- Since there are no demands, provide a fallback or informative message instead -->
-                                        <p>No interview demands available.</p>
-                                    @endforelse
-
-                                </div>
-
-                            </div>
-                            <hr class="d-none d-sm-block d-lg-none">
                         </div>
                     </div>
                 </div>
@@ -178,14 +163,21 @@
             }
         }
 
+        let table = null;
         function initDataTable(tableId, ajaxUrl) {
-            $('#' + tableId).DataTable({
+            table = $('#' + tableId).DataTable({
                 "bAutoWidth": false,
                 "lengthMenu": [[50, 100, 150, -1], [50, 100, 150, "All"]],
                 "pageLength": 50,
                 "processing": true,
                 "serverSide": true,
-                "ajax": { "url": ajaxUrl, "type": "GET" },
+                "ajax": { 
+                    "url": ajaxUrl, 
+                    "type": "GET",
+                    "data": function(d) {
+                        d.data_type = $('#data_type').val();
+                    }
+                },
                 "columns": [
                     { "data": "id", "orderable": false, "searchable": false, "render": data => `<input type="checkbox" name="selectedCandidates[]" value="${data}">` },
                     { "data": "DT_RowIndex", "searchable": false, "orderable": false },
@@ -221,7 +213,6 @@
         function selectAll(source) {
             $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
         }
-
         // AJAX form submission handling
         $('#mainForm').submit(function(e) {
             e.preventDefault();
@@ -245,6 +236,13 @@
                 }
             });
         });
+
+
+        $(document).on('click', '.btn-selected-candidate', function(e){
+            $('#data_type').val($(this).data('type'));
+            table.draw();
+        });
+
 
 
     </script>
