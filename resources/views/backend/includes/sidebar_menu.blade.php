@@ -9,7 +9,7 @@
                 </span>
             </span>
             <span class="app-brand-text demo menu-text fw-semibold ms-2 logo-text">
-                Ditya 
+                Ditya
                 <span>Int. Pvt.Ltd.</span>
             </span>
         </a>
@@ -161,7 +161,7 @@
             </a>
         </li>
 
-        
+
         <li class="menu-item {{ Request::is('user/approved-candidates*') ? 'active' : '' }}">
             <a href="{{route('approved-demand.index')}}" class="menu-link">
              <i class="menu-icon tf-icons ri-home-smile-line"></i>
@@ -176,7 +176,7 @@
             </a>
         </li>
 
-    
+
       @endcan
 
 
@@ -195,7 +195,7 @@
                 <div data-i18n="Company List">Company List </div>
             </a>
         </li>
-     
+
 
         @endcan
 
@@ -216,8 +216,48 @@
         @endcan
 
 
-
         @can(['webContent-read', 'webContent-create'])
+
+            <li class="menu-item">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon tf-icons mdi mdi-cog"></i>
+                    <div data-i18n="Options">Options </div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item">
+                        <a href="{{ route('categories.index') }}" class="menu-link">
+                            <div data-i18n="Category Types">Category Types</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="{{ route('education.types.index') }}" class="menu-link">
+                            <div data-i18n="Education Types">Education Types</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="{{ route('language.index') }}" class="menu-link">
+                            <div data-i18n="Language Types">Language Types</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="{{ route('gender.index') }}" class="menu-link">
+                            <div data-i18n="Gender Types">Gender Types</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="{{ route('year.index') }}" class="menu-link">
+                            <div data-i18n="Experience Years">Experience Years</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        @endcan
+
+
+       @can(['webContent-read', 'webContent-create'])
         <li class="menu-header mt-2">
             <span class="menu-header-text" data-i18n="Website">Website</span>
         </li>
