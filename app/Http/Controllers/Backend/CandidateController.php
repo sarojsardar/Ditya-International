@@ -17,6 +17,7 @@ use App\Data\company\CompanyData;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Data\Candidate\CandidateData;
+use App\Models\Interview;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -438,14 +439,9 @@ class CandidateController extends Controller
             $authCompanyId = $authUser->companyInfo->id;
 
             $demands = User::where('user_type', UserTypes::CANDIDATE)
-                ->whereHas('candidateCompany', function ($query) {
+                ->whereHas('candidateCompany', function ($query) use($authCompanyId) {
                     $query->where('demand_status', UserDemandStatus::Interview);
-                })
-                ->whereHas('candidateCompany', function ($query) {
                     $query->whereIn('interview_status', ['Selected', 'UnSelected', 'KIV', 'Accepted', 'Declined']);
-                })
-                ->whereHas('candidateCompany', function ($query) use ($authCompanyId) {
-                    // Include candidates associated with $authCompanyId
                     $query->where('company_id', $authCompanyId);
                 })
                 ->whereHas('userDetail', function ($query) use ($demand) {
@@ -467,14 +463,10 @@ class CandidateController extends Controller
             $demands = collect(); // or null, based on how you want to handle this scenario
         }
 
-
-
         $userId = $authUserId;
-
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
-
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
-            $userLanguageIds = $user->languages->pluck('id')->all();
+            $userLanguageIds = $user->manyLanguages->pluck('id')->all();
 
             $userCategoryIds = DB::table('category_details')
                 ->where('user_id', $user->id) // Assuming each user has a unique 'id'
@@ -569,16 +561,46 @@ class CandidateController extends Controller
         $demandId = $companyDemand->id; // Use this directly
         // Set current demand in session
         // session(['currentDemand' => $filteredUsers]);
-
         if ($request->ajax()) {
+            $data_type = $request->data_type ?? 'all';
             
             $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
             ->whereHas('candidateCompany', function ($query) {
-                $query->where('demand_status', UserDemandStatus::Approved);
+
+                // this is mommented due to the filter of user interview
+                // $query->where('demand_status', UserDemandStatus::Approved);
+
             })
             ->whereHas('candidateCompany', function ($query) use ($demandId) {
                 $query->where('demand_id', $demandId);
             });
+
+            $filteredUsers->when(($data_type && $data_type !== 'all'), function($query) use($data_type, $companyDemand) {
+                $query->whereHas('interviews', function($query) use($data_type, $companyDemand) {
+                    $query->where('demand_id', $companyDemand->id)
+                          ->where('demand_code', $companyDemand->demand_code);
+            
+                    switch ($data_type) {
+                        case 'all':
+                            // No additional conditions
+                            break;
+                        case 'scheduled':
+                            $query->where('is_taken', false)->where('is_selected', false);
+                            break;
+                        case 'selected':
+                            $query->where('is_taken', true)->where('is_selected', true);
+                            break;
+                        case 'rejected':
+                            $query->where('is_taken', true)->where('is_selected', false);
+                            break;
+                        default:
+                            // No additional conditions
+                            break;
+                    }
+                });
+            });
+            
+            
 
             return DataTables::of($filteredUsers)
                 ->addIndexColumn()
@@ -628,6 +650,34 @@ class CandidateController extends Controller
                 ->addColumn('demand_status', function($row) {
                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
                     return $row->candidateCompany->demand_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                })
+                ->addColumn('interview_status', function($row) use($companyDemand) {
+                    $interView = Interview::where('user_id', $row->id)->where('demand_id', $companyDemand->id)->where('demand_code', $companyDemand->demand_code)->latest()->first();
+                    $status = "Not Scheduled";
+                    if($interView){
+                        if(!(bool)$interView->is_taken){
+                            if($interView->reschedule_date){
+                                $status = "Rescheduled At ".\Carbon\Carbon::parse($interView->reschedule_date)->format('Y-m-d').' '.\Carbon\Carbon::parse($interView->reschedule_time)->format('h:i A');
+                            }else{
+                                $status = "Scheduled At ".\Carbon\Carbon::parse($interView->interview_date)->format('Y-m-d').' '.\Carbon\Carbon::parse($interView->interview_time)->format('h:i A');
+                            }
+                        }
+                        if((bool)$interView->is_taken){
+                            $status = "Taken ". ((bool)$interView->is_selected ? '(Selected)' : 'Rejected');
+                        }
+                        
+
+                    }
+                    return $status;
+                })
+
+                ->addColumn('user_accpeptance', function($row) use($companyDemand) {
+                    $interView = Interview::where('user_id', $row->id)->where('demand_id', $companyDemand->id)->where('demand_code', $companyDemand->demand_code)->latest()->first();
+                    $status = "Pending";
+                    if($interView){
+                        $status = $interView->user_accept_status;
+                    }
+                    return $status;
                 })
                 // Add other columns...
                 ->addColumn('action', function ($row) {

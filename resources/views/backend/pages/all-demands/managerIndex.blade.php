@@ -11,20 +11,19 @@
             <div class="card-widget-separator-wrapper">
                 <div class="card-body card-widget-separator">
                     <div class="row gy-4 gy-sm-1">
-                        <div class="col-sm-12 col-lg-3">
+                        <div class="col-sm-12">
                             <div class="d-flex justify-content-end align-items-start card-widget-1 border-end pb-3 pb-sm-0">
-                              
                                 @forelse($demands as $demand)
                                     @isset($demand->company_id)
                                         <input type="hidden" value="" id="data_type" name="data_type">
                                         <a href="#" data-type="all" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-primary waves-effect waves-light">All Candidate</a>
-                                        <a href="#" data-type="scheduled" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-info waves-effect waves-light">On Interview</a>
+                                        <a href="#" data-type="scheduled" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-info waves-effect waves-light">On Schedule</a>
                                         <a href="#" data-type="selected" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-secondary waves-effect waves-light">Interview Selected</a>
+                                        <a href="#" data-type="rejected" class="btn-selected-candidate p-1 m-1 btn btn-sm btn-secondary waves-effect waves-light">Interview Rejected</a>
                                     @endisset
                                 @empty
                                     <p>No demands available.</p> <!-- Consider showing a message or a different link when there are no demands -->
                                 @endforelse
-                            
                             </div>
                             <hr class="d-none d-sm-block d-lg-none me-4">
                         </div>
@@ -61,8 +60,10 @@
                                 <div class="tab-content" id="nav-tabContent">
                                     @forelse($demands as $demand)
                                         <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="list-demand{{ $demand->id }}" role="tabpanel">
+
+                                            <input type="hidden" name="cemand_id[]" value="{{$demand->id}}"   id="deman_id-{{$demand->id}}">
                                             <h5 class="text-light fw-medium">Candidates List of - {{ $demand->demand_code }}</h5>
-                                            <form action="{{ route('users.update.status.notify') }}" method="post" id="mainForm">
+                                            <form action="{{ route('users.update.status.notify') }}" method="post" id="mainForm" data-demand_code="{{$demand->demand_code}}">
                                                 @csrf
                                                 <div class="table-responsive mt-3">
                                                     <table class="table table-bordered dt-responsive nowrap" id="approvedCandidatesTable{{ $demand->id }}" data-demand-code="{{ $demand->demand_code }}">
@@ -71,6 +72,8 @@
                                                             <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
                                                             <th>S.N</th>
                                                             <th>Status</th>
+                                                            <th>Scheduled</th>
+                                                            <th>User Acceptance</th>
                                                             <th>Full Name</th>
                                                             <th>Gender</th>
                                                             <th>Passport No</th>
@@ -182,6 +185,8 @@
                     { "data": "id", "orderable": false, "searchable": false, "render": data => `<input type="checkbox" name="selectedCandidates[]" value="${data}">` },
                     { "data": "DT_RowIndex", "searchable": false, "orderable": false },
                     { "data": "demand_status" },
+                    { "data": "interview_status" },
+                    { "data": "user_accpeptance" },
                     { "data": "full_name" },
                     { "data": "gender" },
                     { "data": "passport_number" },
@@ -222,6 +227,8 @@
             $('input[type="checkbox"]:not(:checked)').each(function() {
                 formData += `&${this.name}=off`;
             });
+
+            formData +=`&demand_code=${$(this).data('demand_code')}`
 
             $.ajax({
                 url: $(this).attr('action'),

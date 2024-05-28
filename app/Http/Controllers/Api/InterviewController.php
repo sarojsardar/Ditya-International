@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
+use App\Models\Company;
+use App\Models\Interview;
+use Illuminate\Http\Request;
+use App\Models\CompanyDemand;
 use App\Enum\UserDemandStatus;
+use App\Models\CompanyCandidate;
 use App\Enum\UserInterviewStatus;
+use App\Action\NotificationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CompanyResource;
-use App\Models\CompanyCandidate;
-use App\Models\User;
-use Illuminate\Http\Request;
 
 class InterviewController extends Controller
 {
@@ -49,6 +53,7 @@ class InterviewController extends Controller
     public function interviewInvites() {
         $userID = auth()->id(); // Retrieve the authenticated user's ID
 
+        // What the fuck laude code
         // Directly retrieve CompanyCandidate records for the authenticated user, including interview data
         $companyCandidates = CompanyCandidate::with(['company'])
             ->where('user_id', $userID)
@@ -69,20 +74,99 @@ class InterviewController extends Controller
 
 
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $company_id)
     {
+            $user = auth()->user();
+            // the company_id is the user id of the company it may be change if required(this is written due to the demand company id is the user id not the company id)
+            $companyDemand = CompanyDemand::where('company_id', $company_id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
+            if(!$companyDemand){
+                return response()->json([
+                    'message'=>'Demand Not Open, Or May be completed or closed',
+                    'status'=>404,
+                ], 404);
+            }
             // Validate the request data
             $validatedData = $request->validate([
                 'interview_status' => 'required', // Adjust validation rules as needed
             ]);
 
+            // What the fuck laude code
             // Find the CompanyCandidate by user_id, throw a ModelNotFoundException if not found
-            $companyCandidate = CompanyCandidate::where('user_id', $id)->firstOrFail();
-
+            $companyUser = User::where('id', $companyDemand->company_id)->first();
+            if(!$companyUser){
+                return response()->json([
+                    'message'=>'Demand Not Open, Or May be completed or closed',
+                    'status'=>404,
+                ], 404);
+            }
+            $company = Company::where('user_id', $companyUser->id)->first();
+            $companyCandidate = CompanyCandidate::where('company_id', $company->id)->where('user_id', $user->id)->where('demand_id', $companyDemand->id)->latest()->firstOrFail();
             // Update the CompanyCandidate's interview status
             $companyCandidate->interview_status = $validatedData['interview_status'];
             $companyCandidate->demand_status = UserDemandStatus::Interview;
             $companyCandidate->save();
+            try {
+                $interview = Interview::where([
+                    'demand_id'=>$companyDemand->id,
+                    'demand_code'=>$companyDemand->demand_code,
+                    'user_id'=>$user->id,
+                    'user_accept_status'=>'Pending',
+                    'is_taken'=>false,
+                    'is_selected'=>false,
+                ])->latest()->first();
+                if($interview){
+                    $interview->user_accept_status = $validatedData['interview_status'];
+                    $interview->save();
+                }
+
+
+                $generated_by = get_class(auth()->user());
+                $generated_id = auth()->user()->id;
+                // This may be change according to the candidate model 
+                
+                $generated_to = get_class($company?->user ?? new User());
+                $generated_to_id = $company?->user?->id ?? 0;
+
+                $title = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $go_to_url = "#";
+                // in the below the href must be changed;
+                $web_content = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $mobile_content = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $is_auto = true;
+                $send_to = 4;
+
+
+                (new NotificationAction(
+                    $title,
+                    $web_content,
+                    $mobile_content,
+                    $is_auto,
+                    $generated_by,
+                    $generated_id,
+                    $generated_to,
+                    $generated_to_id,
+                    $send_to,
+                    $go_to_url,
+                    ))->pushNotification();
+                    
+
+                $generated_to = "System";
+                $generated_to_id = 0;
+                (new NotificationAction(
+                        $title,
+                        $web_content,
+                        $mobile_content,
+                        $is_auto,
+                        $generated_by,
+                        $generated_id,
+                        $generated_to,
+                        $generated_to_id,
+                        $send_to,
+                        $go_to_url,
+                        ))->pushNotification();
+            } catch (\Throwable $th) {
+                info("Error While Updating Status of the interview: ".$th->getMessage());
+            }
 
             // Return a successful response
             return response()->json([

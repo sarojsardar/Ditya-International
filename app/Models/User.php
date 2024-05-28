@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -156,6 +157,12 @@ class User extends Authenticatable
     public function comment()
     {
         return $this->hasOne(Comment::class);
+    }
+
+
+    public function interviews():HasMany
+    {
+        return $this->hasMany(Interview::class, 'user_id');
     }
 
 

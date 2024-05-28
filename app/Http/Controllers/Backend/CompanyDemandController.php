@@ -26,6 +26,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Data\CompanyDemand\CompanyDemandData;
+use App\Enum\UserInterviewStatus;
 
 class CompanyDemandController extends Controller
 {
@@ -322,18 +323,94 @@ class CompanyDemandController extends Controller
 
     public function statusUpdate(Request $request, $id)
     {
+        dd($request->interview_status);
+
         // Validate the request data
         $request->validate([
             'interview_status' => 'required', // Add more rules as necessary
         ]);
 
-        $companyCandidate = CompanyCandidate::where('user_id', $id)->first();
-
+        $user = auth()->user();
+        $companyUser = $user;
+        $companyDemand = CompanyDemand::where('company_id', $companyUser->id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
+        // new developed  to get the unique and for the same demand candidate
+        $company = Company::where('user_id', $companyUser->id)->first();
+        $companyCandidate = CompanyCandidate::where('company_id', $company->id)->where('user_id', $id)->where('demand_id', $companyDemand->id)->latest()->firstOrFail();
         if ($companyCandidate) {
             // If found, update the interview_status
             $companyCandidate->update([
                 'interview_status' => $request->interview_status
             ]);
+
+            try {
+
+                $is_selected = false;
+                if($request->interview_status == "Selected"){
+                    $is_selected = true;
+                }else{
+                    $is_selected = false;
+                }
+                $interview = Interview::where([
+                    'demand_id'=>$companyDemand->id,
+                    'demand_code'=>$companyDemand->demand_code,
+                    'user_id'=>$id,
+                    'user_accept_status'=>'Accepted',
+                    'is_taken'=>false,
+                    'is_selected'=>false,
+                ])->latest()->first();
+                if($interview){
+                    $interview->is_taken = true;
+                    $interview->is_selected = $is_selected;
+                    $interview->save();
+                }
+
+                $generated_by = get_class(auth()->user());
+                $generated_id = auth()->user()->id;
+                // This may be change according to the candidate model 
+                
+                $generated_to = get_class($company?->user ?? new User());
+                $generated_to_id = $company?->user?->id ?? 0;
+
+                $title = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $go_to_url = "#";
+                // in the below the href must be changed;
+                $web_content = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $mobile_content = "$user->name has been".  $validatedData['interview_status'] ."your interview proposal by the company".  $company->name;
+                $is_auto = true;
+                $send_to = 4;
+
+
+                (new NotificationAction(
+                    $title,
+                    $web_content,
+                    $mobile_content,
+                    $is_auto,
+                    $generated_by,
+                    $generated_id,
+                    $generated_to,
+                    $generated_to_id,
+                    $send_to,
+                    $go_to_url,
+                    ))->pushNotification();
+                    
+
+                $generated_to = "System";
+                $generated_to_id = 0;
+                (new NotificationAction(
+                        $title,
+                        $web_content,
+                        $mobile_content,
+                        $is_auto,
+                        $generated_by,
+                        $generated_id,
+                        $generated_to,
+                        $generated_to_id,
+                        $send_to,
+                        $go_to_url,
+                        ))->pushNotification();
+            } catch (\Throwable $th) {
+                info("Error While Updating Status of the interview: ".$th->getMessage());
+            }
 
             // Redirect with a success message
             return redirect()->route('interview-demand.index')->with('success', 'Status updated successfully.');
@@ -405,13 +482,25 @@ class CompanyDemandController extends Controller
         $newInterviewTime = $readableTime;
 
         // Retrieve a single company candidate for company details
-        $companyCandidate = CompanyCandidate::whereIn('user_id', $userIds)
-            ->with('company')
-            ->first();
+        $companyName = '';
+        $companyDemand = CompanyDemand::where('demand_code', $request->demand_code)->whereIn('status', ['Open', 'Pending'])->latest()->first();
 
-        $companyName = optional($companyCandidate->company)->name ?? '';
-        $company = $companyCandidate->company;
-        $companyDemand = CompanyDemand::where('company_id', $company->id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
+
+        // This must be chnage after complete of the project due to the company_id is the user id
+        $companyUser = User::where('id', $companyDemand->company_id)->first();
+        $company = Company::where('user_id', $companyUser->id)->first();
+        if($company){
+            $companyName = $company->name;
+        }
+
+
+
+        // New Developed to Update The Interview Status
+        CompanyCandidate::whereIn('user_id', $userIds)->update([
+            'interview_status'=>UserInterviewStatus::Pending,
+        ]);
+
+
         foreach ($userIds as $userId) {
             $interview = Interview::updateOrCreate(
                 [

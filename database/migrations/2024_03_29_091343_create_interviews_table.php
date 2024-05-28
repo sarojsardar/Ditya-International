@@ -4,6 +4,7 @@ use App\Models\CompanyDemand;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use League\CommonMark\Extension\Table\TableExtension;
 
 return new class extends Migration
 {
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->text('reschedule_reason')->nullable();
             $table->boolean('is_taken')->default(false);
             $table->boolean('is_selected')->default(false);
+            $table->enum('user_accept_status', ['Pending', 'Accepted', 'Declined'])->default('Pending');
             $table->timestamps();
         });
     }
