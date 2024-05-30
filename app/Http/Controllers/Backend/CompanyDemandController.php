@@ -248,9 +248,6 @@ class CompanyDemandController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-
-        dd($request->all());
-        
         $demand = User::findOrFail($id);
         if ($request->input('demand_status') === 'Approved' || 'Pending' || 'Rejected' && is_null($demand->reference_id)) {
             $reference_id = IdGenerator::generate([
