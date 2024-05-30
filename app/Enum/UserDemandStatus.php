@@ -10,6 +10,8 @@ class UserDemandStatus extends Enum{
 
     const Rejected = 'Rejected';
 
+    const Selected = 'Selected';
+
     const Approved = 'Approved';
 
     const Interview = 'Interview';
