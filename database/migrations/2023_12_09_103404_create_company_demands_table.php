@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('company_demands', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('company_id');
             $table->foreignIdFor(User::class, 'company_id')->comment('this is changed to the user id due to the company id is not storing to the database');
             $table->string('demand_code');
             $table->string('quota');

@@ -417,11 +417,16 @@
                                     <label for="">Status</label>
                                     <select name="demand_status" id="statusDropdown" class="form-control">
                                         <option value="Approved" @if($userDetails->demand_status == 'New') selected @endif>Approved</option>
+
+                                        @if($userDetails->demand_status !== "Selected")
                                         <option value="Pending" >Pending</option>
                                         <option value="Rejected" >Rejected</option>
+                                        @endif
                                     </select>
                                 </div>
 
+
+                                @if(auth()->user()->user_type !== \App\Enum\UserTypes::COMPANY)
                                 <div class="form-group">
                                     <label for="">Companies</label>
                                     @php
@@ -437,6 +442,9 @@
                                         <ul class="parsley-errors-list filled"><li class="parsley-required">{{ $errors->first('company') }}</li></ul>
                                     @endif
                                 </div>
+                                @endif
+
+
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
