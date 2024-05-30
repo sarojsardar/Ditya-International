@@ -27,6 +27,7 @@ class CandidateStatusNotificationAction
 
     public function updateStatus($status, $userId)
     {
+        $this->send_to = 4;
         $candidate = User::findOrFail($userId);
         $this->generated_by = get_class(auth()->user());
         $this->generated_id = auth()->user()->id;
@@ -38,8 +39,8 @@ class CandidateStatusNotificationAction
         switch ($status) {
             case UserDemandStatus::Approved:
                 $title = "You Have Wishlisted By the ".$company->name;
-                $web_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
-                $mobile_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                $web_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
+                $mobile_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
                 $this->pushNotification();
                 break;
             case UserDemandStatus::Rejected:
@@ -50,8 +51,8 @@ class CandidateStatusNotificationAction
                 break;
             case UserDemandStatus::Selected:
                 $title = "You Have Selected By the ".$company->name;
-                $web_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
-                $mobile_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                $web_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
+                $mobile_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
                 $this->pushNotification();
                 break;
             default:
@@ -62,17 +63,23 @@ class CandidateStatusNotificationAction
 
     private function pushNotification()
     {
-        (new NotificationAction(
-            $this->title,
-            $this->web_content,
-            $this->mobile_content,
-            $this->is_auto,
-            $this->generated_by,
-            $this->generated_id,
-            $this->generated_to,
-            $this->generated_to_id,
-            $this->send_to,
-            $this->go_to_url,
-            ))->pushNotification();
+
+        // try {
+            (new NotificationAction(
+                $this->title,
+                $this->web_content,
+                $this->mobile_content,
+                $this->is_auto,
+                $this->generated_by,
+                $this->generated_id,
+                $this->generated_to,
+                $this->generated_to_id,
+                $this->send_to,
+                $this->go_to_url,
+                ))->pushNotification();
+        // } catch (\Throwable $th) {
+        //     info("Error : ".$th->getMessage());
+        // }
+       
     }
 }

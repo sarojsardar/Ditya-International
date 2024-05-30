@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Action\CandidateStatusNotificationAction;
 use App\Action\NotificationAction;
 use App\Models\User;
 use App\Models\Year;
@@ -250,6 +249,7 @@ class CompanyDemandController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $demand = User::findOrFail($id);
+
         if ($request->input('demand_status') === 'Approved' || 'Pending' || 'Rejected' && is_null($demand->reference_id)) {
             $reference_id = IdGenerator::generate([
                 'table' => 'users',
@@ -262,23 +262,52 @@ class CompanyDemandController extends Controller
             $demand->demand_status = 'New';
             $demand->save();
 
+
+            if(auth()->user()->user_type == UserTypes::COMPANY){
+                $company = Company::where('user_id', auth()->user()->id)->first();
+                if($company){
+                    $company_id = $company->id;
+                }else{
+                    $company_id = 0;
+                }
+              
+            }
             
-            CompanyCandidate::updateOrCreate([
-                [
-                    'user_id' => $id,
-                    'company_id' => $request->company_id,
-                    'demand_id' => $request->demand_id,
-                ],
-                [
-                    'demand_status' => $request->demand_status
-                ]
+            CompanyCandidate::create([
+                'user_id' => $id,
+                'company_id' => $company_id,
+                'demand_id' => $request->demand_id,
+                'demand_status' => $request->demand_status
             ]);
 
 
             // new code added for the notification
             try {
-                $status = $request->demand_status;
-                (new CandidateStatusNotificationAction)->updateStatus($status, $demand->id);
+                $generated_by = get_class(auth()->user());
+                $generated_id = auth()->user()->id;
+                // This may be change according to the candidate model 
+                $generated_to = get_class($demand);
+                $generated_to_id = $demand->id;
+                $company = Company::where('user_id', auth()->user()->id)->latest()->first();
+                $title = "You Have Wishlisted By the ".$company->name;
+                $go_to_url = "#";
+                // in the below the href must be changed;
+                $web_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                $mobile_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                $is_auto = true;
+                $send_to = 4;
+                (new NotificationAction(
+                    $title,
+                    $web_content,
+                    $mobile_content,
+                    $is_auto,
+                    $generated_by,
+                    $generated_id,
+                    $generated_to,
+                    $generated_to_id,
+                    $send_to,
+                    $go_to_url,
+                    ))->pushNotification();
             } catch (\Throwable $th) {
                 info("Error While Pushing Notification: ".$th->getMessage());
             }
@@ -304,7 +333,7 @@ class CompanyDemandController extends Controller
 
     public function statusUpdate(Request $request, $id)
     {
-        dd($request->interview_status);
+       
 
         // Validate the request data
         $request->validate([
