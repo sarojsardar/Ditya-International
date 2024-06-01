@@ -45,19 +45,16 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::put('/update/{staff}', [StaffController::class, 'update'])->name('staff.update')->middleware(['can:staff-update']);
 
     //company
-    ROute::get('/company-list', [CompanyController::class, 'index'])->name('company.index');
-    ROute::get('/company/create', [CompanyController::class, 'create'])->name('company.create');
-    ROute::post('/company/store', [CompanyController::class, 'store'])->name('company.store');
-    ROute::get('/company-list/{id}/edit', [CompanyController::class, 'edit'])->name('company.edit');
-    ROute::put('/company-list/{id}/update', [CompanyController::class, 'update'])->name('company.update');
-    ROute::get('/manager/company-list', [CompanyController::class, 'index'])->name('manager.company.index')->middleware(['can:manager-company-read']);
+    Route::get('/company-list', [CompanyController::class, 'index'])->name('company.index');
+    Route::get('/company/create', [CompanyController::class, 'create'])->name('company.create');
+    Route::post('/company/store', [CompanyController::class, 'store'])->name('company.store');
+    Route::get('/company-list/{id}/edit', [CompanyController::class, 'edit'])->name('company.edit');
+    Route::put('/company-list/{id}/update', [CompanyController::class, 'update'])->name('company.update');
+    Route::get('/manager/company-list', [CompanyController::class, 'index'])->name('manager.company.index')->middleware(['can:manager-company-read']);
 
-    ROute::get('/receptionist/company-list', [CompanyController::class, 'receptionist'])->name('receptionist.company.index')->middleware(['can:receptionist-company-read']);
+    Route::get('/receptionist/company-list', [CompanyController::class, 'receptionist'])->name('receptionist.company.index')->middleware(['can:receptionist-company-read']);
 
-    ROute::get('/medical-process', [CompanyController::class, 'receptionist'])->name('receptionist.medical.company.index')->middleware(['can:receptionist-company-read']);
-
-    ROute::get('/medical-process', [CompanyController::class, 'receptionist'])->name('receptionist.medical.company.index')->middleware(['can:receptionist-company-read']);
-
+    Route::get('/receptionist/medical-process', [CompanyController::class, 'medicalProcess'])->name('receptionist.medical.company.index')->middleware(['can:receptionist-company-read']);
     
 
     //company demand entry
@@ -97,6 +94,10 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::get('/manager/interview-list/{companyId}', [CompanyDemandController::class, 'managerInterviewIndex'])->name('manager-interview-demand.index');
 
     Route::get('/receptionist/company-list/{companyId}', [CompanyDemandController::class, 'receptionistIndex'])->name('receptionist-demand.index');
+
+    // move to medical
+    Route::post('/receptionist/move-to-medical', [CompanyDemandController::class, 'moveToMedical'])->name('move-to-medical');
+
 
 
     Route::get('/candidate/demand/list', [CandidateController::class, 'index'])->name('candidate.index')->middleware(['can:candidate-read']);

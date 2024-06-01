@@ -5,6 +5,7 @@ namespace App\Action;
 use App\Models\User;
 use App\Models\Company;
 use App\Enum\UserDemandStatus;
+use App\Models\Candidat\MedicalCheckup;
 
 class CandidateStatusNotificationAction
 {
@@ -80,6 +81,15 @@ class CandidateStatusNotificationAction
         // } catch (\Throwable $th) {
         //     info("Error : ".$th->getMessage());
         // }
-       
+    }
+
+    public function moveToMedical($medicalCheckupIds)
+    {
+        
+    }
+
+    public function updateMedicalCheckupStatus(MedicalCheckup $medicalCheckup)
+    {
+
     }
 }

@@ -47,6 +47,7 @@
                                 <th>S.N</th>
                                 <th>Logo</th>
                                 <th>Company</th>
+                                <th>Selected</th>
                                 <th>Company Country</th>
                                 <th>Company Address</th>
                                 <th>Category</th>
@@ -98,14 +99,33 @@
                 }
             },
             columns: [
-                {'data' : 'DT_RowIndex'},
-                {'data' : 'logo'},
-                {'data' : 'name'},
-                {'data' : 'country'},
-                {'data' : 'address'},
-                { 'data': 'categories'},
-                {'data' : 'email'},
-                {'data' : 'action'},
+                {
+                    'data' : 'DT_RowIndex'
+                },
+                {
+                    'data' : 'logo'
+                },
+                {
+                    'data' : 'name'
+                },
+                {
+                    'data' : 'selected'
+                },
+                {
+                    'data' : 'country'
+                },
+                {
+                    'data' : 'address'
+                },
+                {
+                    'data': 'categories'
+                },
+                {
+                    'data' : 'email'
+                },
+                {
+                    'data' : 'action'
+                },
             ]
         })
 

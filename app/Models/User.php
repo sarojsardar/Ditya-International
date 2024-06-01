@@ -3,7 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Models\Candidat\MedicalCheckup;
+use App\Models\Medical\Medical;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -90,12 +94,12 @@ class User extends Authenticatable
 
     public function userDetail()
     {
-        return $this->hasOne(UserDetail::class, );
+        return $this->hasOne(UserDetail::class);
     }
 
     public function bankDetail()
     {
-        return $this->hasOne(BankDetail::class, );
+        return $this->hasOne(BankDetail::class);
     }
 
     /**
@@ -165,8 +169,17 @@ class User extends Authenticatable
         return $this->hasMany(Interview::class, 'user_id');
     }
 
+    //  user type MEDICAL_OFFICER and the user role is Medical Officer
+    public function medicals():BelongsToMany
+    {
+        return $this->belongsToMany(Medical::class, 'medical_officer', 'user_id', 'medical_id');
+    }
 
-
+    // if user type is candidate and is in checkup status
+    public function medicalCheckup():HasMany
+    {
+        return $this->hasMany(MedicalCheckup::class, 'user_id');
+    }
 
 
 }

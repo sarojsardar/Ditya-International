@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Action\CandidateStatusNotificationAction;
 use App\Action\NotificationAction;
 use App\Models\User;
 use App\Models\Year;
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Auth;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Data\CompanyDemand\CompanyDemandData;
 use App\Enum\UserInterviewStatus;
+use App\Models\Candidat\MedicalCheckup;
+use App\Models\Medical\Medical;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class CompanyDemandController extends Controller
 {
@@ -114,8 +119,11 @@ class CompanyDemandController extends Controller
     public function receptionistIndex($companyId){
 
         $demands =  CompanyDemand::where('company_id', $companyId)->orderBy('created_at', 'desc')->get();
-
-        return view('backend.pages.all-demands.receptionistIndex', compact('demands'));
+        $medicals = Medical::orderBy('name')->where('status', true)->get();
+        return view('backend.pages.all-demands.receptionistIndex', [
+            'demands'=>$demands,
+            'medicals'=>$medicals,
+        ]);
     }
 
 
@@ -612,10 +620,73 @@ class CompanyDemandController extends Controller
 
         return response()->json(['error' => 'Candidate not found'], 404);
     }
+    // new developed to move to medical
+    public function moveToMedical(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'all_candidates'=>'required',
+            'demad_id'=>'required|exists:company_demands,id',
+            'medical_id'=>'required|exists:medicals,id',
+            'checkup_date'=>'required'
+        ]);
 
+        if($validator->fails()){
+            return back()->withInput()->withErrors($validator->errors());
+        }
+        $candidates = json_decode($request->all_candidates);
+        $medical = Medical::findOrFail($request->medical_id);
+        $demand = CompanyDemand::findOrFail($request->demad_id);
+        $medicalCheckupIds =[];
+        foreach($candidates as $candidateId){
+            $candidate = User::find($candidateId);
+            if($candidate){
 
+                // this is devloped according to the old db designed
+                // Here this can be change according to the company id if we save the company id to the company demand table
+                $company = Company::where('user_id', $demand->company_id)->first();
+                $companyCandidate = CompanyCandidate::where([
+                    'demand_id'=>$demand->id,
+                    'company_id'=>$company->id,
+                    'user_id'=>$candidate->id,
+                ])->first();
+                if($companyCandidate){
+                    $companyCandidate->medical_status = 'N/A';
+                    $companyCandidate->save();
+                }
+                $medicalCheckupdata =[
+                    'company_id'=>$company->id,
+                    'medical_id'=>$medical->id,
+                    'user_id'=>$candidate->id,
+                    'demand_id'=>$demand->id,
+                    'demand_code'=>$demand->demand_code,
+                    'checkup_date'=>Carbon::parse($request->checkup_date),
+                    'is_tested'=>false,
+                    'status'=>'N/A',
+                    'is_re_scheduled'=>false,
+                    'is_new'=>true,
+                ];
+                $medicalCheckup = MedicalCheckup::where([
+                    'user_id'=>$candidate->id,
+                    'demand_id'=>$demand->id,
+                    'demand_code'=>$demand->demand_code,
+                ])->first();
 
-
-
-
+                if($medicalCheckup){
+                    $medicalCheckupdata['is_re_scheduled'] = true;
+                    $medicalCheckupdata['is_tested'] = false;
+                    $medicalCheckup->save();
+                }else{
+                    $medicalCheckup = MedicalCheckup::create($medicalCheckupdata);
+                }
+                $medicalCheckupIds[] = $medicalCheckup->refresh()->id;
+            }
+        }
+        try {
+            (new CandidateStatusNotificationAction)->moveToMedical($medicalCheckupIds);
+        } catch (\Throwable $th) {
+            info("Error While Pushing Notification :".$th->getMessage());
+        }
+        session()->flash('success','Successfully Moved To Medical');
+        return redirect()->route('receptionist.medical.company.index');
+    }
 }

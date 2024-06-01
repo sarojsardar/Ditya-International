@@ -7,6 +7,30 @@
 @section('content')
 
     <div class="container-xxl flex-grow-1 container-p-y">
+
+        <div class="card mb-4">
+            <div class="card-widget-separator-wrapper">
+                <div class="card-body card-widget-separator">
+                    <div class="row gy-4 gy-sm-1">
+                        <div class="col-sm-12">
+                            <div class="d-flex justify-content-end align-items-start card-widget-1 border-end pb-3 pb-sm-0">
+                                @forelse($demands as $demand)
+                                @isset($demand->company_id)
+                                    <a href="#" data-type="move_to_medical" data-demad_id="{{$demand->id}}" class="action-btn p-1 m-1 btn btn-sm btn-primary waves-effect waves-light">Move To Medical</a>
+                                @endisset
+                                @empty
+                                    <p>No demands available.</p> <!-- Consider showing a message or a different link when there are no demands -->
+                                @endforelse
+                            </div>
+                            <hr class="d-none d-sm-block d-lg-none me-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -38,9 +62,11 @@
                                         <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="list-demand{{ $demand->id }}" role="tabpanel">
                                             <h5 class="text-light fw-medium">Candidates List of - {{ $demand->demand_code }}</h5>
                                             <div class="table-responsive mt-3">
+
                                                 <table class="table table-bordered dt-responsive nowrap" id="approvedCandidatesTable{{ $demand->id }}" data-demand-code="{{ $demand->demand_code }}">
                                                     <thead>
                                                     <tr>
+                                                        <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
                                                         <th>S.N</th>
                                                         <th>Status</th>
                                                         <th>Full Name</th>
@@ -56,6 +82,7 @@
                                                     </tr>
                                                     </thead>
                                                 </table>
+                                                
                                             </div>
                                         </div>
                                     @empty
@@ -71,24 +98,39 @@
     </div>
 
 
-    <!-- Print Modal -->
-    <div class="modal fade" id="printModal" tabindex="-1" role="dialog" aria-labelledby="printModalLabel" aria-hidden="true">
+  
+    <div class="modal fade" id="move_to_medical" tabindex="-1" role="dialog" aria-labelledby="move_to_medicalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="printModalLabel">Print Preview</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Loading print preview...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="printDocument()">Print</button>
-                </div>
-            </div>
+
+            <form action="{{route('move-to-medical')}}" method="post">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="move_to_medicalLabel">Move to Medical</h5>
+                    </div>
+                    <div class="modal-body">
+                      <input type="hidden" name="all_candidates" id="all_candidates" class="all_candidates">
+                      <input type="hidden" name="demad_id" id="demad_id" class="demad_id">
+                      <div class="form-group">
+                            <label for="">Medical</label>
+                            <select name="medical_id" id="medical_id" class="form-control">
+                                @foreach ($medicals as $index=>$medical)
+                                    <option value="{{$medical->id}}">{{$medical->name}}</option>                                    
+                                @endforeach
+                            </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="">Arrival Date/time</label>
+                        <input type="datetime-local" class="form-control" name="checkup_date">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Move Now</button>
+                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>    
+            </form>
         </div>
     </div>
 
@@ -136,24 +178,44 @@
                     "type": "GET",
                 },
                 "columns": [
-                    {"data": "DT_RowIndex", searchable: false, orderable: false},
-                    {"data": "interview_status"},
-                    {"data": "full_name"},
-                    {"data": "gender"},
-                    {"data": "passport_number"},
-                    {"data": "expiry_date"},
-                    {"data": "total_work_experience"},
-                    {"data": "permanent_address"},
-                    {"data": "age"},
-                    {"data": "height"},
-                    {"data": "weight"},
+                    { "data": "id", "orderable": false, "searchable": false, "render": data => `<input type="checkbox" name="selectedCandidates[]" value="${data}">` },
+                    {
+                        "data": "DT_RowIndex",
+                        searchable: false, 
+                        orderable: false
+                    },
+                    {
+                        "data": "interview_status"
+                    },
+                    {
+                        "data": "full_name"
+                    },
+                    {
+                        "data": "gender"
+                    },
+                    {
+                        "data": "passport_number"
+                    },
+                    {
+                        "data": "expiry_date"
+                    },
+                    {
+                        "data": "total_work_experience"
+                    },
+                    {
+                        "data": "permanent_address"
+                    },
+                    {
+                        "data": "age"
+                    },
+                    {
+                        "data": "height"
+                    },
+                    {
+                        "data": "weight"
+                    },
                     {
                         "data": "id",
-                        "render": function(data, type, row) {
-                            return `
-                            <button class="btn btn-success btn-sm" onclick="updateCandidateStatus(${data}, 'New','${tableId}')">Move to Medical</button>
-                        `;
-                        }
                     },
                 ],
                 "initComplete": function() {
@@ -195,6 +257,54 @@
                 }
             });
         }
+
+
+        function selectAll(source) {
+            $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
+        }
+
+        // AJAX form submission handling
+        function submitData(){
+            var formData = $(this).serialize();
+                $('input[type="checkbox"]:not(:checked)').each(function() {
+                formData += `&${this.name}=off`;
+            });
+
+            formData +=`&demand_code=${$(this).data('demand_code')}`
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#updateStatusModal').modal('hide');
+                    window.location.reload();
+                },
+                error: function(xhr) {
+                    alert(`Error: ${xhr.statusText}`);
+                }
+            });
+        }
+
+
+
+
+        $(document).on('click', '.action-btn', function(e){
+            e.preventDefault();
+            const selectedCandidates = [];
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selectedCandidates[]"]:checked');
+            checkboxes.forEach((checkbox) => {
+                selectedCandidates.push(checkbox.value);
+            });
+            if(selectedCandidates.length <= 0){
+                alert("Sorry Please Select at least one candidate to move to medical");
+                return;
+            }
+            $('#all_candidates').val(JSON.stringify(selectedCandidates));
+            $('#demad_id').val($(this).data('demad_id'));
+            $('#move_to_medical').modal('show');
+            console.log(selectedCandidates);
+        });
     </script>
 
 

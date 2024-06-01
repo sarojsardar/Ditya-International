@@ -4,13 +4,9 @@ use App\Abstracts\Enum;
 
 class UserTypes extends Enum{
 
-    const NORMAL = '1';
-
-    const COMPANY = '2';
-
-    const CANDIDATE = '3';
-
-
-
-
+    const NORMAL=1;
+    const COMPANY =2;
+    const CANDIDATE =3;
+    const MEDICAL_OFFICER=4;
+    const DOCUMENT_OFFICER=5;
 }

@@ -799,28 +799,27 @@ class CandidateController extends Controller
         if (!$companyDemand) {
             abort(404, 'Demand not found.');
         }
-
-        $demandId = $companyDemand->id;
-
-        $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
-            ->whereHas('candidateCompany', function ($query) {
-                $query->where('demand_status', UserDemandStatus::Interview);
-            })
-            ->whereHas('candidateCompany', function ($query) {
-                $query->where('interview_status', [UserInterviewStatus::Selected]);
-            })
-            ->whereHas('candidateCompany', function ($query) use ($demandId) {
-                $query->where('demand_id', $demandId);
-            })
-            ->get();
-        // Set current demand in session
-        session(['currentDemand' => $filteredUsers]);
-
         if ($request->ajax()) {
+
+            $demandId = $companyDemand->id;
+            $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
+                ->whereHas('candidateCompany', function ($query) {
+                    $query->where('demand_status', UserDemandStatus::Interview);
+                })
+                ->whereHas('candidateCompany', function ($query) {
+                    $query->where('interview_status', [UserInterviewStatus::Selected]);
+                })
+                ->whereHas('candidateCompany', function ($query) use ($demandId) {
+                    $query->where('demand_id', $demandId);
+                })
+                ->get();
+
+
             if ($filteredUsers->isEmpty()) {
                 return DataTables::of([])->make(true);
             }
 
+            
             return DataTables::of($filteredUsers)
                 ->addIndexColumn()
                 // Add your columns as before

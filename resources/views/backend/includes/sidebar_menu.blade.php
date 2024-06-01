@@ -216,6 +216,41 @@
         @endcan
 
 
+        {{-- After manag of permission we can remove this if condition --}}
+        @if((int)auth()->user()->user_type = \App\Enum\UserTypes::MEDICAL_OFFICER)
+        {{-- New developed for the medical officer --}}
+        {{-- this permission must be managed --}}
+
+        {{-- @can(['receptionist-company-read']) --}}
+        <li class="menu-item {{ Request::is('user/medical-officer/candidate*') ? 'active' : '' }}">
+            <a href="{{route('medical-officer.candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="All Candidate">All Candidate</div>
+            </a>
+        </li>
+        {{-- @endcan --}}
+        @endif
+
+
+
+         {{-- After manag of permission we can remove this if condition --}}
+         @if((int)auth()->user()->user_type = \App\Enum\UserTypes::DOCUMENT_OFFICER)
+         {{-- New developed for the medical officer --}}
+         {{-- this permission must be managed --}}
+
+         {{-- @can(['receptionist-company-read']) --}}
+         <li class="menu-item {{ Request::is('user/document-officer/candidate*') ? 'active' : '' }}">
+             <a href="{{route('document-officer.candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="All Candidate">All Candidate</div>
+             </a>
+         </li>
+         {{-- @endcan --}}
+         @endif
+
+
+
+        
         @can(['webContent-read', 'webContent-create'])
 
             <li class="menu-item">

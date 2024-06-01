@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('demand_id')->nullable();
             $table->string('demand_status');
             $table->string('interview_status')->default('0');
-            $table->string('medical_status')->nullable();
+            $table->enum('medical_status', ['N/A', 'Fit', 'Unfit'])->default('N/A');
             $table->integer('pro_id')->nullable();
             $table->timestamps();
         });
