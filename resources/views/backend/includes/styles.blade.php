@@ -46,7 +46,7 @@
 <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/cards-statistics.css') }}" />
 
 <!-- Custom CSS -->
-<link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" />
+{{-- <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" /> --}}
 
 <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
 <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script>
