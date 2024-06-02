@@ -127,6 +127,10 @@
                     <div class="modal-body">
                         <p id="status-paragraph"></p>
                         <input type="hidden" id="status-input" name="status">
+                        <div class="form-group">
+                            <label for="">Report file</label>
+                            <input type="file" class="form-control">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary">Change Status</button>

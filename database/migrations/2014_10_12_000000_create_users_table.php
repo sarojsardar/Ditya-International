@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('username')->nullable();
             $table->string('email')->unique()->nullable();
-            $table->enum('user_type', [1,2,3,4,5,6,7,8,9,10])->comment('i for normal, 2 for company, 3 for candidate, 4 for medical officer and so on this my be added according to the requirement')->default(1);
+            $table->enum('user_type', [1,2,3,4,5,6,7,8,9,10])->comment('1 for normal, 2 for company, 3 for candidate, 4 for medical officer, 5 for Document Officer and so on this my be added according to the requirement')->default(1);
             $table->string('mobile_no')->nullable();
             $table->integer('code')->nullable();
             $table->timestamp('email_verified_at')->nullable();

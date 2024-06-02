@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\VisaProcess;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -56,5 +57,10 @@ class CompanyDemand extends Model
     public function medicalCheckup():HasMany
     {
         return $this->hasMany(MedicalCheckup::class, 'demad_id');
+    }
+
+    public function visaProcesses():HasMany
+    {
+        return $this->hasMany(VisaProcess::class, 'demad_id');
     }
 }

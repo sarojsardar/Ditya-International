@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\VisaProcess;
 use App\Models\Medical\Medical;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -78,7 +79,7 @@ class User extends Authenticatable
     public function educations(){
         return $this->hasMany(EducationalDocument::class, 'user_id');
     }
-
+    
     public function company()
     {
         return $this->belongsTo(Company::class, 'user_id');
@@ -180,6 +181,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(MedicalCheckup::class, 'user_id');
     }
+
+
+     // if user type is candidate and is in checkup status
+     public function visaProcess():HasMany
+     {
+         return $this->hasMany(VisaProcess::class, 'user_id');
+     }
 
 
 }
