@@ -10,13 +10,9 @@ use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
 use App\Models\EducationType;
 use App\Models\CompanyCandidate;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Candidat\MedicalCheckup;
-use Illuminate\Support\Facades\Validator;
-use App\Data\Datatables\MedicalAccessApidata;
 use App\Data\Datatables\DocumentAccessApidata;
-use App\Action\CandidateStatusNotificationAction;
 use App\Models\Interview;
 
 class DocumentAccessController extends Controller
@@ -85,7 +81,7 @@ class DocumentAccessController extends Controller
 
     public function proceedToVisa(Request $request, $companyCandidateId)
     {
-
+        
     }
     public function sendNotification(Request $request)
     {
