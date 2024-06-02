@@ -183,6 +183,8 @@
                         </ul>
                     </div>
                     <div class="header-utilities">
+                        
+                        @if(!auth()->check())
                         <div class="header-utilities-btns">
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle effect-button" type="button"
@@ -198,6 +200,8 @@
                                 </ul>
                             </div>
                         </div>
+                        @endif
+
                         <div class="header-utilities-mobile">
                             <ul>
                                 <li><a href="login.php"><i class="las la-sign-in-alt"></i></a></li>

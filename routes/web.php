@@ -9,6 +9,7 @@ use App\Http\Controllers\Backend\CompanyDemandController;
 use App\Http\Controllers\Backend\GalleryController;
 use App\Http\Controllers\Backend\LanguageController;
 use App\Http\Controllers\Backend\MasterSearchController;
+use App\Http\Controllers\Backend\MedicalController;
 use App\Http\Controllers\Backend\NewsController;
 use App\Http\Controllers\Backend\PortfolioController;
 use App\Http\Controllers\Backend\ProfileController;
@@ -65,6 +66,14 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::put('/company-demand-entry/update/{id}', [CompanyDemandController::class, 'update'])->name('company-demand.update')->middleware(['can:demand-update']);
     Route::get('/company-demand-entry/detail/{id}', [CompanyDemandController::class, 'detail'])->name('company-demand.detail')->middleware(['can:demand-read']);
     Route::get('/company-demand-entry/getCompanyDetail/{id}', [CompanyDemandController::class, 'getCompanyDetail'])->name('company-demand.getCompanyDetail')->middleware(['can:demand-create']);
+
+    //Medical
+    Route::get('/medical-list', [MedicalController::class, 'index'])->name('medical.index');
+    Route::get('/medical-create', [MedicalController::class, 'create'])->name('medical.create');
+    Route::post('/medical-store', [MedicalController::class, 'store'])->name('medical.store');
+    Route::get('/medical-edit/{id}', [MedicalController::class, 'edit'])->name('medical.edit');
+    Route::put('/medical-update/{id}', [MedicalController::class, 'update'])->name('medical.update');
+    Route::get('/medical/toggleMedicalStatus/{id}', [MedicalController::class, 'toggleMedicalStatus'])->name('medical.toggleMedicalStatus');
 
     //Status
     Route::post('/user/{id}/status', [CompanyDemandController::class, 'updateStatus'])->name('changeStatus');
