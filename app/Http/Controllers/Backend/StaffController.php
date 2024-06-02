@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
+use App\Models\Medical\Medical;
 use Yajra\DataTables\Facades\DataTables;
 
 class StaffController extends Controller
@@ -71,7 +72,9 @@ class StaffController extends Controller
 
         $roles = (new RoleData(null))->getAllRoles();
         $staff = new User();
-        return view('backend.pages.staffs.form', compact('roles', 'staff'));
+        $userTypes = UserTypes::getAllValues();
+        $medicals = Medical::orderBy('name', 'ASC')->get();
+        return view('backend.pages.staffs.form', compact('roles', 'staff', 'medicals', 'userTypes'));
     }
 
 
@@ -96,6 +99,10 @@ class StaffController extends Controller
             'full_address' => 'required',
             'role' => 'required',
             'profile_picture' => 'sometimes|file|mimes:jpg,jpeg,png,bmp,tiff|max:4096', // 'sometimes' conditionally validates the field
+            'user_type' => 'required',
+            'medical' => 'required_if:role,4',
+        ], [
+            'medical.required_if' => 'The medical field is required if the assigned role is Medical Officer.',
         ]);
 
         DB::beginTransaction();
@@ -109,12 +116,15 @@ class StaffController extends Controller
             $newStaff = User::create([
                 'username' => strtolower($request->first_name) . str_pad(mt_rand(1,9999), 4, '0', STR_PAD_LEFT),
                 'email' => $request->email,
+                'user_type' => $request->user_type,
                 'password' => Hash::make('nepal123'),
                 'status' => UserStatus::Active,
             ]);
 
             $role = Role::findById($request->role);
             $newStaff->assignRole($role);
+
+            $newStaff->medicals()->attach($request->medical);
 
             UserInformation::create([
                 'user_id' => $newStaff->id,
@@ -155,7 +165,11 @@ class StaffController extends Controller
             'contact' => 'required|unique:user_information,contact,' . $infoId . '|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'full_address' => 'required',
             'role' => 'required',
-            'profile_picture' => 'sometimes|mimes:jpg,jpeg,png,bmp,tiff|max:4096'
+            'profile_picture' => 'sometimes|mimes:jpg,jpeg,png,bmp,tiff|max:4096',
+            'user_type' => 'required',
+            'medical' => 'required_if:role,4',
+        ], [
+            'medical.required_if' => 'The medical field is required if the assigned role is Medical Officer.',
         ]);
 
         DB::beginTransaction();
@@ -172,6 +186,8 @@ class StaffController extends Controller
                 // Assume your StaffData class handles the profile picture update
                 // Ensure the update method in StaffData is capable of handling file uploads
             }
+
+            $staff->medicals()->sync($request->medical);
 
             (new StaffData($request))->update($staff);
 

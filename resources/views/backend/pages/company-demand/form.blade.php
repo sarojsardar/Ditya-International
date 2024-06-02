@@ -148,12 +148,14 @@ Company Demand Entry | {{ config('app.name') }}
                                     <label for="">Experience in years<span
                                             style="color: rgb(241, 69, 69)">*</span></label>
 
-                                    <select name="experience_year" class="form-control select2-options"
+                                    <select name="experience_year" class="form-control"
                                         id="years-options">
                                         <option value="">== Choose Experience ==</option>
                                         @foreach($years as $year)
-                                        <option value="{{$year->name}}" @if($year->name == $demand->year) selected
-                                            @endif>{{$year->name}} Years</option>
+                                        <option value="{{$year->name}}" 
+                                            @if($year->name == $demand->experience_year) selected @endif>
+                                            {{$year->name}} Years
+                                        </option>
                                         @endforeach
                                     </select>
 
@@ -192,11 +194,15 @@ Company Demand Entry | {{ config('app.name') }}
                             <hr>
                         </div>
                         <div class="col-lg-12">
-                            <label for="">Select Required Language<span style="color: rgb(241, 69, 69)">*</span></label>
+                            <label for="" class="mb-2">Select Required Language<span style="color: rgb(241, 69, 69)">*</span></label>
                             <div class="form-group">
                                 @foreach($languages as $language)
-                                <input type="checkbox" name="languages[]" value="{{$language->id}}" style="cursor: pointer">
-                                <label for="{{$language->name}}"> {{$language->name}}</label><br>
+                                <div class="form-check">
+                                    <input type="checkbox" name="languages[]" value="{{$language->id}}"
+                                    {{ in_array($language->id, $demand->languages->pluck('id')->toArray())? 'checked' : '' }}
+                                    class="form-check-input" style="cursor: pointer">
+                                    <label class="form-check-label" for="{{$language->name}}"> {{$language->name}}</label><br>
+                                </div>
                                 @endforeach
                             </div>
                         </div>
@@ -222,10 +228,10 @@ Company Demand Entry | {{ config('app.name') }}
                                     @foreach ($letters as $letter)
                                     @if (pathinfo(public_path('storage/uploads/company-demand-letters/' . $letter),
                                     PATHINFO_EXTENSION) == 'pdf')
-                                    <img src='{{ asset(' pdf-logo.jpg') }}' alt='Medical report image'
+                                    <img src='{{ asset('pdf-logo.jpg') }}' alt='Medical report image'
                                         style='height: 5rem;width: auto;'>
                                     @else
-                                    <img src='{{ url(' /storage/uploads/company-demand-letters/'.$letter)}}'
+                                    <img src='{{ url('/storage/uploads/company-demand-letters/'.$letter)}}'
                                         alt='company logo' style='height: 80px;;margin-bottom:10px;'>
                                     @endif
                                     {{-- <img src='{{ url(' /storage/public/uploads/company-demand-letters/'.$letter)
