@@ -58,7 +58,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="">Checkup Date:</label>
-                                    <input type="text" name="checkup_date" id="checkup_date" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" class="date_range form-control form-control">
+                                    <input type="text" name="checkup_date" id="checkup_date" value="" class="date_range form-control form-control">
                                 </div>
                             </div>
 
@@ -67,10 +67,11 @@
                                 <div class="form-group">
                                     <label for="">Status:</label>
                                     <select name="status" id="status" class="form-control form-control-sm">
-                                        <option value="All">All</option>
+                                        <option value="Fit" selected>Fit</option>
+                                        <option value="Tested">Scheduled</option>
                                         <option value="Tested">Tested</option>
-                                        <option value="Fit">Fit</option>
                                         <option value="Unfit">Unfit</option>
+                                        <option value="All">All</option>
                                     </select>
                                 </div>
                             </div>
@@ -150,7 +151,7 @@
             "processing": true,
             "severside": true,
             ajax: {
-                url: "{{route('medical-officer.candidate')}}",
+                url: "{{route('document-officer.candidate')}}",
                 data: function(d) {
                     d.medical = $('#medical').val();
                     d.company = $('#company').val();

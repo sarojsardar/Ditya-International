@@ -242,7 +242,7 @@
 
 
         {{-- After manag of permission we can remove this if condition --}}
-        @if((int)auth()->user()->user_type = \App\Enum\UserTypes::MEDICAL_OFFICER)
+        @if((int)auth()->user()->user_type == \App\Enum\UserTypes::MEDICAL_OFFICER)
         {{-- New developed for the medical officer --}}
         {{-- this permission must be managed --}}
 
@@ -256,10 +256,8 @@
         {{-- @endcan --}}
         @endif
 
-
-
          {{-- After manag of permission we can remove this if condition --}}
-         @if((int)auth()->user()->user_type = \App\Enum\UserTypes::DOCUMENT_OFFICER)
+         @if((int)auth()->user()->user_type == \App\Enum\UserTypes::DOCUMENT_OFFICER)
          {{-- New developed for the medical officer --}}
          {{-- this permission must be managed --}}
 
