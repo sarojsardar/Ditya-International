@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Enum\UserDemandStatus;
-use App\Enum\UserInterviewStatus;
+use App\Models\User;
 use App\Enum\UserTypes;
 use App\Models\Company;
-use App\Models\CompanyCandidate;
+use App\Models\Language;
+use App\Models\Interview;
+use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
 use App\Models\EducationType;
-use App\Models\Language;
-use App\Models\User;
-use App\Notifications\DemandNotification;
-use Illuminate\Http\Request;
+use App\Enum\UserDemandStatus;
+use App\Models\CompanyCandidate;
 use App\Data\company\CompanyData;
+use App\Enum\UserInterviewStatus;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Data\Candidate\CandidateData;
-use App\Models\Interview;
 use Yajra\DataTables\Facades\DataTables;
+use App\Notifications\DemandNotification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class CandidateController extends Controller
@@ -264,9 +266,10 @@ class CandidateController extends Controller
 
         $authUserId = auth('web')->user()->id;
 
-        $demand = CompanyDemand::where('demand_code', $demandCode)
-            ->where('company_id', $authUserId)
-            ->first();
+            $demand = CompanyDemand::where('demand_code', $demandCode)
+                ->where('company_id', $authUserId);
+            $demand->whereIn('status', ['Open', 'Pending']);
+            $demand = $demand->latest()->first();
 
         if (!$demand) {
             if ($request->ajax()) {
@@ -286,14 +289,13 @@ class CandidateController extends Controller
         $authUser = auth()->user();
         if ($authUser && $authUser->companyInfo) {
             $authCompanyId = $authUser->companyInfo->id;
-
+            $company = Company::where('id', $authCompanyId)->first();
+            
             $demands = User::where('user_type', UserTypes::CANDIDATE)
-                ->whereHas('candidateCompany', function ($query) {
+                ->whereHas('candidateCompany', function ($query) use($authCompanyId, $demand) {
                     $query->where('demand_status', UserDemandStatus::Approved);
-                })
-                ->whereHas('candidateCompany', function ($query) use ($authCompanyId) {
-                    // Include candidates associated with $authCompanyId
                     $query->where('company_id', $authCompanyId);
+                    $query->where('demand_id', $demand->id);
                 })
                 ->whereHas('userDetail', function ($query) use ($demand) {
                     if ($demand->gender !== 'both') {
@@ -307,6 +309,10 @@ class CandidateController extends Controller
                 ->whereHas('educations', function ($query) use ($demand) {
                     $query->where('edu_level', '>=', $demand->edu_level);
                 })
+                // ->whereHas('interviews', function (Builder $query) use ($demand) {
+                //     $query->whereColumn('interviews.user_id', 'users.id')
+                //           ->where('interviews.demand_id', $demand->id);
+                // })
                 ->get();
         } else {
             // Handle cases where the auth user or their company info is not available
@@ -383,9 +389,12 @@ class CandidateController extends Controller
                 ->addColumn('total_work_experience', function($row){
                     return $row->total_work_experience;
                 })
-                ->addColumn('demand_status', function($row) {
+                ->addColumn('demand_status', function($row) use($company, $demand) {
                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
-                    return $row->candidateCompany->demand_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                    return $row->candidateCompany()->where([
+                        'company_id'=>$company?->id,
+                        'demand_id'=>$demand->id,
+                    ])->latest()->first()?->demand_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
                 })
                 ->addColumn('action', function($row) {
                     // Assuming you have a demand ID in your session
@@ -419,12 +428,12 @@ class CandidateController extends Controller
             ->where('company_id', $authUserId)
             ->first();
 
+        $company = Company::where('user_id', $authUserId)->latest()->first();
         if (!$demand) {
             if ($request->ajax()) {
                 return DataTables::of([])->make(true);
             }
         }
-
         $languageIds = CompanyDemand::where('demand_code', $demandCode)
             ->with('languages')
             ->get()
@@ -528,9 +537,12 @@ class CandidateController extends Controller
                 ->addColumn('total_work_experience', function($row){
                     return $row->total_work_experience;
                 })
-                ->addColumn('interview_status', function($row) {
-                    // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
-                    return $row->candidateCompany->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                ->addColumn('interview_status', function($row) use($company, $demand) {
+                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
+                     return $row->candidateCompany()->where([
+                        'company_id'=>$company?->id,
+                        'demand_id'=>$demand->id,
+                    ])->latest()->first()?->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
                 })
                 ->addColumn('action', function($row) {
                     // Assuming you have a demand ID in your session
@@ -558,6 +570,8 @@ class CandidateController extends Controller
     public function managerApprovedDemandCandidates(Request $request, $demandCode)
     {
         $companyDemand = CompanyDemand::where('demand_code', $demandCode)->firstOrFail(); // Directly abort if not found
+        $companyUser = User::where('id', $companyDemand->company_id)->first();
+        $company = Company::where('user_id', $companyUser->id)->first();
         $demandId = $companyDemand->id; // Use this directly
         // Set current demand in session
         // session(['currentDemand' => $filteredUsers]);
@@ -647,9 +661,12 @@ class CandidateController extends Controller
                 ->addColumn('total_work_experience', function($row){
                     return $row->total_work_experience;
                 })
-                ->addColumn('demand_status', function($row) {
+                ->addColumn('demand_status', function($row) use($company, $companyDemand) {
                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
-                    return $row->candidateCompany->demand_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                    return $row->candidateCompany()->where([
+                       'company_id'=>$company?->id,
+                       'demand_id'=>$companyDemand->id,
+                   ])->latest()->first()?->demand_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
                 })
                 ->addColumn('interview_status', function($row) use($companyDemand) {
                     $interView = Interview::where('user_id', $row->id)->where('demand_id', $companyDemand->id)->where('demand_code', $companyDemand->demand_code)->latest()->first();
@@ -699,11 +716,10 @@ class CandidateController extends Controller
 
     public function managerInterviewDemandCandidates(Request $request, $demandCode){
         $companyDemand = CompanyDemand::where('demand_code', $demandCode)->first();
-
         if (!$companyDemand) {
             abort(404, 'Demand not found.');
         }
-
+        $company = Company::where('user_id', $companyDemand->company_id)->first();
         $demandId = $companyDemand->id;
 
         $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
@@ -767,10 +783,13 @@ class CandidateController extends Controller
                 ->addColumn('total_work_experience', function($row){
                     return $row->total_work_experience;
                 })
-                ->addColumn('interview_status', function($row) {
+                ->addColumn('interview_status', function($row) use($company, $companyDemand) {
                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
-                    return $row->candidateCompany->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
-                })
+                    return $row->candidateCompany()->where([
+                       'company_id'=>$company?->id,
+                       'demand_id'=>$companyDemand->id,
+                   ])->latest()->first()?->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+               })
                 // Add other columns...
                 ->addColumn('action', function ($row) {
                     $printUrl = route('candidate.printCandidateApplication', ['id' => $row->id]);
@@ -942,9 +961,11 @@ class CandidateController extends Controller
         $demands = CompanyDemand::get();
         $proUsers = User::role('PRO')->get();
 
+        $company = Company::where('user_id', auth()->user()->id)->first();
+        $currentDemad = CompanyDemand::where('company_id', auth()->user()->id)->first();
         $companies = Company::get();
 
-        return view('backend.pages.all-demands.userDetail', compact('userDetails', 'educationTypes', 'languages','demands','proUsers','companies','demandId','companyCandidate'));
+        return view('backend.pages.all-demands.userDetail', compact('userDetails', 'educationTypes', 'languages','demands','proUsers','companies','demandId','companyCandidate', 'company', 'currentDemad'));
     }
 
 

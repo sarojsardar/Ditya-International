@@ -96,8 +96,8 @@
                                     </ul>
                                 </div>
                                 <div class="button-group" style="flex-shrink: 0;"> <!-- Ensure the buttons don't shrink -->
-                                    <a href="#" id="send-to-vis-process" title='Info' class="me-2"> <!-- Add me-2 for spacing -->
-                                        <button class='btn btn-sm btn-primary'><i class='fas fa-info'></i> Proceed to Visa Proceess</button>
+                                    <a href="#" id="document-status" title='Info' class="me-2"> <!-- Add me-2 for spacing -->
+                                        <button class='btn btn-sm btn-primary'><i class='fas fa-info'></i>Document Status</button>
                                     </a>
 
                                     <a href="#" id="notify-user" title='Info' class="me-2"> <!-- Add me-2 for spacing -->
@@ -378,19 +378,17 @@
     </div>
 
 
-    <div class="modal fade" id="proceed-to-visa" tabindex="-1" role="dialog" aria-labelledby="proceed-to-visaLabel" aria-hidden="true">
+    <div class="modal fade" id="changeDocumentStatus" tabindex="-1" role="dialog" aria-labelledby="changeDocumentStatusLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form action="{{route('document-officer.proceed-to-visa', $companyCandidate->id)}}" method="post" id="status-form">
+            <form action="{{route('document-officer.document-status', $companyCandidate->id)}}" method="post" id="status-form">
                 @csrf
                 @method('PATCH')
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="proceed-to-visaLabel">Proceed To Visa Process</h5>
+                        <h5 class="modal-title" id="changeDocumentStatusLabel">Change Document Status</h5>
                     </div>
                     <div class="modal-body">
-                        <p>
-                            <span class="text-danger">This Action could not be revert, please read carfully and submit</span>
-                        </p>
+                        
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary">Procees</button>
@@ -404,9 +402,9 @@
 @endsection
 @push('scripts')
     <script>
-        $(document).on('click', '#send-to-vis-process',  function(e){
+        $(document).on('click', '#document-status',  function(e){
             e.preventDefault();
-            $('#proceed-to-visa').modal('show');
+            $('#changeDocumentStatus').modal('show');
         });
     </script>
 @endpush

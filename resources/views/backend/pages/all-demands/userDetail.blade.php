@@ -390,75 +390,19 @@
 
 
 
-        @if(optional($companyCandidate)->demand_status == 'Approved' ||  optional($companyCandidate)->demand_status == 'Interview')
+        {{-- New developed to use for all company as same time --}}
 
-        @else
-            <div class="modal fade" id="userDetailModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog " role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title" id="exampleModalLabel4">Change Status</h4>
-                            <button
-                                type="button"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                        </div>
-
-                        <form id="statusUpdateForm" method="POST" action="{{ route('changeStatus', ['id' => $userDetails->id]) }}">
-                            @csrf
-                            {{-- Assuming $demand_status and  are already available in this Blade view. --}}
-
-                            {{-- Hidden field for the demand ID --}}
-                            <input type="hidden" name="demand_id" value="{{$demandId}}">
-
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label for="">Status</label>
-                                    <select name="demand_status" id="statusDropdown" class="form-control">
-                                        <option value="Approved" @if($userDetails->demand_status == 'New') selected @endif>Approved</option>
-
-                                        @if($userDetails->demand_status !== "Selected")
-                                        <option value="Pending" >Pending</option>
-                                        <option value="Rejected" >Rejected</option>
-                                        @endif
-                                    </select>
-                                </div>
-
-
-                                @if(auth()->user()->user_type !== \App\Enum\UserTypes::COMPANY)
-                                <div class="form-group">
-                                    <label for="">Companies</label>
-                                    @php
-                                        $userCompany = auth()->user()->companyInfo; // Assuming you're using the default guard
-                                    @endphp
-
-                                    <select name="company_id" class="form-control">
-                                        @if($userCompany)
-                                            <option value="{{ $userCompany->id }}" selected>{{ $userCompany->name }}</option>
-                                        @endif
-                                    </select>
-                                    @if($errors->has('company'))
-                                        <ul class="parsley-errors-list filled"><li class="parsley-required">{{ $errors->first('company') }}</li></ul>
-                                    @endif
-                                </div>
-                                @endif
-
-
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Save changes</button>
-                            </div>
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-
-
-        @endif
-
+        @php
+            $actualCandidate = \App\Models\CompanyCandidate::where([
+                'company_id'=>$company?->id,
+                'demand_id'=>$currentDemad?->id,
+            ])->first();
+            
+            $interview = \App\Models\Interview::where([
+                'demand_id'=>$actualCandidate?->demand_id,
+                'user_id'=>$actualCandidate?->user_id,
+            ])->first();
+        @endphp
 
         <div class="modal fade" id="userDetailModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog " role="document">
@@ -472,20 +416,60 @@
                             aria-label="Close"></button>
                     </div>
 
-                    <form id="statusUpdateForm" method="POST" action="{{ route('statusUpdate', ['id' => $userDetails->id]) }}">
+                    <form id="statusUpdateForm" method="POST" action="{{ route('changeStatus', ['id' => $userDetails->id]) }}">
                         @csrf
                         {{-- Assuming $demand_status and  are already available in this Blade view. --}}
 
+                        {{-- Hidden field for the demand ID --}}
+                        <input type="hidden" name="demand_id" value="{{$demandId}}">
 
                         <div class="modal-body">
+
+                            @if(!$actualCandidate)
+                                <div class="form-group">
+                                    <label for="">Status</label>
+                                    <select name="demand_status" id="statusDropdown" class="form-control">
+                                        <option value="Approved">Approved</option>
+                                        <option value="Pending" >Pending</option>
+                                        <option value="Rejected" >Rejected</option>
+                                    </select>
+                                </div>
+                            @endif
+
+
+                            @if($actualCandidate && $interview)
+                                <div class="form-group">
+                                    <label for="">Status</label>
+                                    <select name="interview_status" id="statusDropdown" class="form-control">
+                                        <option value="Selected" @if($userDetails->interview_status == 'Selected') selected @endif>Selected</option>
+                                        @if($actualCandidate->demand_status !== "Selected")
+                                            <option value="UnSelected" >UnSelected</option>
+                                            <option value="KIV" >KIV</option>
+                                        @endif
+                                    </select>
+                                </div>
+                            @endif
+
+
+
+                            @if((int)auth()->user()->user_type !== \App\Enum\UserTypes::COMPANY)
                             <div class="form-group">
-                                <label for="">Status</label>
-                                <select name="interview_status" id="statusDropdown" class="form-control">
-                                    <option value="Selected" @if($userDetails->interview_status == 'Selected') selected @endif>Selected</option>
-                                    <option value="UnSelected" >UnSelected</option>
-                                    <option value="KIV" >KIV</option>
+                                <label for="">Companies</label>
+                                @php
+                                    $userCompany = auth()->user()->companyInfo; // Assuming you're using the default guard
+                                @endphp
+
+                                <select name="company_id" class="form-control">
+                                    @if($userCompany)
+                                        <option value="{{ $userCompany->id }}" selected>{{ $userCompany->name }}</option>
+                                    @endif
                                 </select>
+                                @if($errors->has('company'))
+                                    <ul class="parsley-errors-list filled"><li class="parsley-required">{{ $errors->first('company') }}</li></ul>
+                                @endif
                             </div>
+                            @endif
+
 
                         </div>
                         <div class="modal-footer">
@@ -497,6 +481,7 @@
                 </div>
             </div>
         </div>
+      
 
         <!-- Comment Modal -->
         <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">

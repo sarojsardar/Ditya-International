@@ -78,7 +78,11 @@ class InterviewController extends Controller
     {
             $user = auth()->user();
             // the company_id is the user id of the company it may be change if required(this is written due to the demand company id is the user id not the company id)
-            $companyDemand = CompanyDemand::where('company_id', $company_id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
+            $companyCandiate = CompanyCandidate::where('company_id', $company_id)->latest()->first();
+
+            $company = Company::where('id', $companyCandiate->company_id)->first();
+            $companyUser = User::where('id', $company->user_id)->first();
+            $companyDemand = CompanyDemand::where('company_id', $companyUser->id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
             if(!$companyDemand){
                 return response()->json([
                     'message'=>'Demand Not Open, Or May be completed or closed',

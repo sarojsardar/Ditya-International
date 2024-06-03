@@ -189,7 +189,7 @@ class CompanyController extends Controller
                                         // This may be changed according to the status if required
                                         // ->where('demand_status', 'Interview')
                                         ->get();
-                    return "< href='".$infoUrl."'>". count($companyCandidate)."</a>";
+                    return "<a href='".$infoUrl."'>". count($companyCandidate)."</a>";
                 })
                 ->addColumn('country', function($row){
                     return $row->originCountry->code.' | '.$row->originCountry->name;

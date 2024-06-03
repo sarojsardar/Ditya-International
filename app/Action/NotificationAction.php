@@ -56,7 +56,7 @@ class NotificationAction
     private function pushToSystem()
     {
         if((int)$this->send_to == NotificationSendEnum::SYSTEM){
-
+            
         }
     }
     public function pushNotification()

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('status', ['N/A', 'Fit', 'Unfit'])->default('N/A');
             $table->boolean('is_re_scheduled')->default(false);
             $table->boolean('is_new')->default(true);
+            $table->string('report')->nullable();
             $table->timestamps();
         });
     }

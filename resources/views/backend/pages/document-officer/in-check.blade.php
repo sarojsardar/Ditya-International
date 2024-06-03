@@ -94,9 +94,10 @@
                         <table class="table table table-bordered dt-responsive nowrap dataTable no-footer dtr-inline" id="company-list-datatable">
                             <thead>
                             <tr>
-                                <th>S.N</th>
+                                <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
                                 <th>Checkup Date</th>
                                 <th>Status</th>
+                                <th>Document Status</th>
                                 <th>Candidate</th>
                                 <th>Company</th>
                                 <th>Company Logo</th>
@@ -179,6 +180,14 @@
                 }
             },
             columns: [
+                { 
+                    "data": "id", 
+                    "orderable": false, 
+                    "searchable": false, 
+                    "render": function(data, type, row) {
+                        return (row.document_status == 'Completed') ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                    }
+                },
                 {
                     'data' : 'DT_RowIndex'
                 },
@@ -187,6 +196,9 @@
                 },
                 {
                     'data':'medical_status'
+                },
+                {
+                    'data':'document_status'
                 },
                 {
                     'data' : 'candidate_info'

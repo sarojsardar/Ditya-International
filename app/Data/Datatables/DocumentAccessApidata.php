@@ -37,6 +37,12 @@ class DocumentAccessApidata
                  ->on('medical_checkups.company_id', '=', 'company_candidates.company_id')
                  ->on('medical_checkups.demand_id', '=', 'company_candidates.demand_id');
         })
+
+        ->leftJoin('document_processes', function ($join) {
+            $join->on('document_processes.user_id', '=', 'candidates.id')
+                 ->on('document_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('document_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
         ->select([
                 'company_candidates.*',
 
@@ -66,6 +72,8 @@ class DocumentAccessApidata
                 'medical_checkups.checkup_date',
                 'medical_checkups.status as medical_status',
                 'medical_checkups.is_tested',
+
+                'document_processes.status as document_status',
             ])
         ->where([
             'company_candidates.demand_status'=>'Interview',
@@ -124,7 +132,6 @@ class DocumentAccessApidata
                 $url = url('/storage/uploads/company-logo/'. $row->company_logo);
                 return "<img src='{$url}' alt='company logo' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
             })
-
             ->addColumn('candidate_info', function($row){
                 $showUrl = route('document-officer.show-candidate', $row->id);
                 $return_string = '
