@@ -5,11 +5,12 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\CompanyCandidate;
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Company;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DocumentAccessApidata
+class CompanyAccessApidata
 {
     protected $request;
     function __construct(Request $request)
@@ -24,7 +25,12 @@ class DocumentAccessApidata
         $status = request()->status;
         $checkup_date = request()->checkup_date;
 
+        // It Can Be Changed According to requerement and the time availability
+        if(!$company){
+            $company = Company::where('user_id', auth()->user()->id)->latest()->first()?->id;
+        }
 
+        
         $companyCandidates = CompanyCandidate::query()
         ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
         ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
@@ -52,7 +58,6 @@ class DocumentAccessApidata
         })
         ->select([
                 'company_candidates.*',
-
 
                 'companies.name as company_name',
                 'companies.address as company_address',
@@ -102,7 +107,7 @@ class DocumentAccessApidata
             }
         })
         ->when($company, function($query, $company){
-            $query->wnereIn('company_candidates.company_id', $company);
+            $query->where('company_candidates.company_id', $company);
         })
         ->when($checkup_date, function($query, $checkup_date){
             $checkup_date = explode('to', $checkup_date);

@@ -26,8 +26,53 @@
             </div>
         </div>
 
+        <div class="col-lg-12 mb-2">
+            <div class="card">
+                <div class="card-body">
+                    <form action="#">
+        
+        
+                       <div class="row">
+        
+                            @if((int)auth()->user()->user_type == \App\Enum\UserTypes::MEDICAL_OFFICER)
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="">Medical:</label>
+                                        <select name="medical" id="medical" class="form-control form-control-sm">
+                                            <option value="">Please Select</option>
+                                            @foreach ($medicals as $medical)
+                                                <option value="{{$medical->id}}">{{$medical->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="">Demand:</label>
+                                    <select name="demand" id="demand" class="form-control form-control-sm">
+                                        <option value="">Current Demand</option>
+                                        @foreach ((@$demands ?? []) as $demand)
+                                            <option value="{{$demand->id}}">{{$demand->demand_code}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
 
-        @include('backend.partial.filter-form')
+                            <div class="col-md-12">
+                                <button type="button" id="clear_filter" class="ms-1 btn btn-sm btn-danger float-end">Clear</button>
+                                <button type="button" id="filter-btn" class="btn btn-primary btn-sm float-end">Filter</button>
+                            </div>
+        
+                            <div class="col-md-12">
+                                <button type="button" class="btn btn-primary btn-sm" id="proceed-btn-to-visa-process">Upload Visa</button>
+                            </div>
+                       </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <div class="col-lg-12">
             <div class="card">
@@ -37,12 +82,8 @@
                             <thead>
                             <tr>
                                 <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
-                                <th>Checkup Date</th>
                                 <th>Status</th>
-                                <th>Document Status</th>
                                 <th>Candidate</th>
-                                <th>Company</th>
-                                <th>Company Logo</th>
                                 <th>Candidate Profile</th>
                                 <th>Action</th>
                             </tr>
@@ -93,7 +134,7 @@
             "processing": true,
             "severside": true,
             ajax: {
-                url: "{{route('document-officer.candidate')}}",
+                url: "{{route('company-officer.candidate')}}",
                 data: function(d) {
                     d.medical = $('#medical').val();
                     d.company = $('#company').val();
@@ -121,35 +162,23 @@
                 }
             },
             columns: [
-                { 
-                    "data": "id", 
-                    "orderable": false, 
-                    "searchable": false, 
-                    "render": function(data, type, row) {
-                        console.log(row);
-                        return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
-                    }
-                },
+                // { 
+                //     "data": "id", 
+                //     "orderable": false, 
+                //     "searchable": false, 
+                //     "render": function(data, type, row) {
+                //         console.log(row);
+                //         return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                //     }
+                // },
                 {
                     'data' : 'DT_RowIndex'
-                },
-                {
-                    'data':'checkup_date'
-                },
-                {
-                    'data':'medical_status'
                 },
                 {
                     'data':'document_status'
                 },
                 {
                     'data' : 'candidate_info'
-                },
-                {
-                    'data':'company_info'
-                },
-                {
-                    'data' : 'logo'
                 },
                 {
                     'data' : 'profile'

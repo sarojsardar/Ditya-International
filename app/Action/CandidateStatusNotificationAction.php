@@ -2,10 +2,15 @@
 
 namespace App\Action;
 
+use App\Enum\DocumentRequirementEnum;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Company;
+use Illuminate\Http\Request;
 use App\Enum\UserDemandStatus;
+use App\Models\CompanyCandidate;
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\DocumentProcess;
 
 class CandidateStatusNotificationAction
 {
@@ -24,8 +29,6 @@ class CandidateStatusNotificationAction
     function __construct()
     {
     }
-
-
     public function updateStatus($status, $userId)
     {
         $this->send_to = 4;
@@ -64,8 +67,7 @@ class CandidateStatusNotificationAction
 
     private function pushNotification()
     {
-
-        // try {
+        try {
             (new NotificationAction(
                 $this->title,
                 $this->web_content,
@@ -78,18 +80,45 @@ class CandidateStatusNotificationAction
                 $this->send_to,
                 $this->go_to_url,
                 ))->pushNotification();
-        // } catch (\Throwable $th) {
-        //     info("Error : ".$th->getMessage());
-        // }
+        } catch (\Throwable $th) {
+            info("Error : ".$th->getMessage());
+        }
     }
-
     public function moveToMedical($medicalCheckupIds)
     {
-        
+         // Notification must be developed
     }
-
     public function updateMedicalCheckupStatus(MedicalCheckup $medicalCheckup)
     {
+         // Notification must be developed
+    }
+    public function proceedToVisa($visaProcessId)
+    {
+        // Notification must be developed
+    }
+    public function sendRequiredDocumentNotification(Request $request, CompanyCandidate $companyCandidate)
+    {
+        $element_ids = $request->element_ids;
+        $notified_content = [];
+        foreach ($element_ids as $key => $element_id) {
+            $data = [
+                'element'=>$element_id,
+                'reason'=>$request->reasons[$element_id],
+            ];
+            $notified_content[] = $data;
+        }
+        $documentProcess = DocumentProcess::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+        if($documentProcess){
+           $documentProcess->is_notified = true;
+           $documentProcess->notified_date = Carbon::now();
+           $documentProcess->notified_content = json_encode($notified_content);
+           $documentProcess->save();
+        }
 
+        // Notification must be developed
     }
 }

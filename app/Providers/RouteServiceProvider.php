@@ -51,6 +51,11 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/document_officer.php'));
 
             Route::middleware('web')
+                ->prefix('user/company')
+                ->group(base_path('routes/company_officer.php'));
+
+
+            Route::middleware('web')
                 ->group(base_path('routes/rolesAndPermissions.php'));
 
             Route::middleware('web')

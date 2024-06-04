@@ -200,8 +200,6 @@
                 <div data-i18n="Interview Process">Interview Process </div>
             </a>
         </li>
-
-
       @endcan
 
 
@@ -271,6 +269,21 @@
          {{-- @endcan --}}
          @endif
 
+
+       {{-- After manag of permission we can remove this if condition --}}
+       @if((int)auth()->user()->user_type == \App\Enum\UserTypes::COMPANY)
+       {{-- New developed for the medical officer --}}
+       {{-- this permission must be managed --}}
+
+       {{-- @can(['receptionist-company-read']) --}}
+       <li class="menu-item {{ Request::is('user/company/candidate*') ? 'active' : '' }}">
+           <a href="{{route('company-officer.candidate')}}" class="menu-link ">
+              <i class="menu-icon ri-list-indefinite"></i>
+              <div data-i18n="In Visa Process Candidate">In Visa Process Candidate</div>
+           </a>
+       </li>
+       {{-- @endcan --}}
+       @endif
 
 
         

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Document;
+namespace App\Http\Controllers\Company;
 
 use App\Action\CandidateStatusNotificationAction;
 use App\Models\User;
@@ -13,7 +13,7 @@ use App\Models\EducationType;
 use App\Models\CompanyCandidate;
 use App\Http\Controllers\Controller;
 use App\Models\Candidat\MedicalCheckup;
-use App\Data\Datatables\DocumentAccessApidata;
+use App\Data\Datatables\CompanyAccessApidata;
 use App\Models\Candidate\DocumentProcess;
 use App\Models\Candidate\VisaProcess;
 use App\Models\Interview;
@@ -21,27 +21,25 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class DocumentAccessController extends Controller
+class CompanyAccessController extends Controller
 {
     public function getInCandidates(Request $request)
     {
 
-        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
             abort(401);
         }
         $medicals = auth()->user()->medicals;
         $companies = Company::orderBy('name')->get();
         if($request->ajax()){
-            return (new DocumentAccessApidata($request))->getInCandidates();
+            return (new CompanyAccessApidata($request))->getInCandidates();
         }
-        return view('backend.pages.document-officer.in-check', ['companies'=>$companies, 'medicals'=>$medicals]);
+        return view('backend.pages.company-officer.in-check', ['companies'=>$companies, 'medicals'=>$medicals]);
     }
-
-
 
     public function showDetails($companyCandidateId)
     {
-        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
             abort(401);
         }
         $companyCandidate = CompanyCandidate::findOrFail($companyCandidateId);
@@ -97,7 +95,7 @@ class DocumentAccessController extends Controller
     }
     public function updateDocumentStatus(Request $request, $companyCandidateId)
     {
-        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
             abort(401);
         }
         $validator = Validator::make($request->all(), [

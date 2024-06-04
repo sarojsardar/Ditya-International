@@ -28,4 +28,9 @@ class MedicalCheckup extends Model
     {
         return $this->belongsTo(CompanyDemand::class, 'demand_id');
     }
+
+    public function getReportAttribute()
+    {
+        return json_Decode($this->attributes['report'], true) ?? [];
+    }
 }

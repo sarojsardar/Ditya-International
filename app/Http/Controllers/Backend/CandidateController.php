@@ -944,16 +944,19 @@ class CandidateController extends Controller
     public function userDetail($candidateId, $demandId)
     {
         $userDetails = User::with(['userDetail', 'educationalQualification', 'passportDetail', 'workExperience', 'languageDetail','uploadPhoto','BankDetail','resumeDetail','categoryDetail'])->where('id', $candidateId)->first();
-
         // Check if the user was found
-
         if (!$userDetails) {
             return redirect()->route('all-demand.index', $candidateId)->with('error', 'Candidate record not found');
         }
 
-
         // Find the company candidate by user ID
-        $companyCandidate = CompanyCandidate::where('user_id', $candidateId)->first();
+        $demand = CompanyDemand::where('id', $demandId)->firstOrFail();
+        $company  = Company::where('user_id', $demand->company_id)->firstOrFail();
+        $companyCandidate = CompanyCandidate::where([
+                'user_id'=>$candidateId,
+                'company_id'=>$company?->id,
+                'demand_id'=>$demand?->id,
+            ])->first();
 
         $educationTypes = EducationType::all();
         $languages = Language::all();

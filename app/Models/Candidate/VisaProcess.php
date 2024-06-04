@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class VisaProcess extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function candidate():BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
