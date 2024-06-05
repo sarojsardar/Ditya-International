@@ -218,5 +218,15 @@
             $('#all_candidates').val(JSON.stringify(selectedCandidates));
             $('#procees-to-visa-process').modal('show');
         });
+
+
+        $(document).on('click', '#clear_filter', function(e){
+            e.preventDefault();
+            $('#medical').val('');
+            $('#company').val('');
+            $('#checkup_date').val('');
+            $('#status').val('');
+            $('#company-list-datatable').DataTable().ajax.reload();
+        });
     </script>
 @endpush

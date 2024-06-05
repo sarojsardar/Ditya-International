@@ -26,7 +26,6 @@ class CompanyAccessController extends Controller
 {
     public function getInCandidates(Request $request)
     {
-
         if((int)auth()->user()->user_type !== UserTypes::COMPANY){
             abort(401);
         }
@@ -35,7 +34,10 @@ class CompanyAccessController extends Controller
         if($request->ajax()){
             return (new CompanyAccessApidata($request))->getInCandidates();
         }
-        return view('backend.pages.company-officer.in-check', ['companies'=>$companies, 'medicals'=>$medicals]);
+
+        $company = Company::where('user_id', auth()->user()->id)->latest()->first();
+        $demands = CompanyDemand::where('company_id', $company->user_id)->orderBy('demand_code')->get();
+        return view('backend.pages.company-officer.in-check', ['companies'=>$companies, 'demands'=>$demands]);
     }
 
     public function showDetails($companyCandidateId)

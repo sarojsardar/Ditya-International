@@ -9,7 +9,6 @@
     <div class="container-xxl flex-grow-1 container-p-y">
         <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4 pb-4 border-bottom mb-4">
-
             <div class="d-flex flex-column justify-content-center">
                 <div class="d-flex align-items-center me-5 gap-4">
                     <div class="avatar">
@@ -21,8 +20,7 @@
                         <h5 class="mb-0">Candidate/Visa Process</h5>
                         <span>Candidate/Visa Process List Information</span>
                     </div>
-                </div>
-                
+                </div>                
             </div>
         </div>
 
@@ -30,16 +28,13 @@
             <div class="card">
                 <div class="card-body">
                     <form action="#">
-        
-        
                        <div class="row">
-        
                             @if((int)auth()->user()->user_type == \App\Enum\UserTypes::MEDICAL_OFFICER)
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="">Medical:</label>
                                         <select name="medical" id="medical" class="form-control form-control-sm">
-                                            <option value="">Please Select</option>
+                                            <option value="">All</option>
                                             @foreach ($medicals as $medical)
                                                 <option value="{{$medical->id}}">{{$medical->name}}</option>
                                             @endforeach
@@ -52,10 +47,28 @@
                                 <div class="form-group">
                                     <label for="">Demand:</label>
                                     <select name="demand" id="demand" class="form-control form-control-sm">
-                                        <option value="">Current Demand</option>
                                         @foreach ((@$demands ?? []) as $demand)
-                                            <option value="{{$demand->id}}">{{$demand->demand_code}}</option>
+                                            <option value="{{$demand->id}}">{{$demand->demand_code}} ({{ $demand->status}})</option>
                                         @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="">Selected Date:</label>
+                                    <input type="text" name="selected_date" id="selected_date" value="" class="date_range form-control form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="">Status:</label>
+                                    <select name="status" id="status" class="form-control">
+                                        <option value="">Select</option>
+                                        <option value="Pending">(N/A)/Pending</option>
+                                        <option value="Successed">(N/A)/Successed</option>
+                                        <option value="Rejected">(N/A)/Rejected</option>
                                     </select>
                                 </div>
                             </div>
@@ -155,9 +168,8 @@
             ajax: {
                 url: "{{route('company-officer.candidate')}}",
                 data: function(d) {
-                    d.medical = $('#medical').val();
-                    d.company = $('#company').val();
-                    d.checkup_date = $('#checkup_date').val();
+                    d.demand = $('#demand').val();
+                    d.selected_date = $('#selected_date').val();
                     d.status = $('#status').val();
                 },
                 type: 'GET',
@@ -190,7 +202,7 @@
                     "searchable": false, 
                     "render": function(data, type, row) {
                         console.log(row);
-                        return (row.document_status == 'Completed' && (row.visa_status !== null && row.visa_status !== '' && row.visa_status !== undefined && row.visa_status !== "Successed" && row.visa_status !== "Rejected")) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                        return (row.document_status == 'Completed' && (row.visa_status !== null && row.visa_status !== '' && row.visa_status !== undefined && row.visa_status !== "Successed" && row.visa_status !== "Rejected")  &&  (row.demand_status !== "Close"  && row.demand_status !== "Completed")) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
                     }
                 },
                 {
@@ -216,8 +228,7 @@
             let company = $('#company').val();
             let checkup_date = $('#checkup_date').val();
             let status = $('#status').val();
-            if(medical !== null || medical !== undefined || medical !== '' || company !== null || company !== undefined || company !== '' || checkup_date !== null || checkup_date !== undefined || checkup_date !== '' || status !== null || status !== undefined || status !== ''){
-                console.log(table);
+            if(medical !== null || medical !== undefined || medical !== '' || selected_date !== null || selected_date !== undefined || selected_date !== '' || status !== null || status !== undefined || status !== ''){
                 $('#company-list-datatable').DataTable().ajax.reload();
             }
         });
@@ -250,6 +261,16 @@
             }
             $('#all_candidates').val(JSON.stringify(selectedCandidates));
             $('#procees-to-visa-process').modal('show');
+        });
+
+
+
+        $(document).on('click', '#clear_filter', function(e){
+            e.preventDefault();
+            $('#demand').val('');
+            $('#selected_date').val('');
+            $('#status').val('');
+            $('#company-list-datatable').DataTable().ajax.reload();
         });
     </script>
 @endpush

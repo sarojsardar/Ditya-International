@@ -370,12 +370,39 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card mt-5">
             <h5 class="card-header">Medical Report</h5>
-            @foreach (($medicalCheckup->report ?? []) as $report)
+            <div class="container">
+                @foreach (($medicalCheckup->report ?? []) as $report)
                     <img src="{{$report}}" alt="Not Foound" class="img-fluid">
-            @endforeach
+                @endforeach
+            </div>
         </div>
+
+        @if($visaProcess->status == "Successed")
+        <div class="card mt-5">
+            <h5 class="card-header">Visa</h5>
+            <div class="container">
+                <iframe src="{{$visaProcess->visa}}" frameborder="0"></iframe>
+            </div>
+        </div>
+        @endif
+
+
+
+        
+        @if($visaProcess->status == "Rejected")
+        <div class="card mt-5">
+            <h5 class="card-header">Visa</h5>
+            <div class="container">
+                <p>
+                    {{$visaProcess->reason}}
+                </p>
+            </div>
+        </div>
+        @endif
+
+
         <!--/ User Profile Content -->
         <!-- Lightbox Container -->
         <div id="myLightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.75);text-align:center;z-index:9999;">

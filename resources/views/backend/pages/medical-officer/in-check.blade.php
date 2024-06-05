@@ -247,5 +247,15 @@
             mode:'range',
             showMonths:2,
         });
+
+
+        $(document).on('click', '#clear_filter', function(e){
+            e.preventDefault();
+            $('#medical').val('');
+            $('#company').val('');
+            $('#checkup_date').val('');
+            $('#status').val('');
+            $('#company-list-datatable').DataTable().ajax.reload();
+        });
     </script>
 @endpush

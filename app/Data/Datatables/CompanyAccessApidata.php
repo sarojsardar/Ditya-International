@@ -23,7 +23,7 @@ class CompanyAccessApidata
         $company = request()->company;
         $demand = request()->demand;
         $status = request()->status;
-        $checkup_date = request()->checkup_date;
+        $selected_date = request()->selected_date;
 
         // It Can Be Changed According to requerement and the time availability
         if(!$company){
@@ -86,6 +86,8 @@ class CompanyAccessApidata
 
                 'document_processes.status as document_status',
                 'visa_processes.status as visa_status',
+
+                'company_demands.status as demand_status'
             ])
         
             
@@ -99,14 +101,18 @@ class CompanyAccessApidata
         ->when($demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
         })
+
+        ->when($status, function($query, $status){
+           $query->where('visa_processes.status', $status);
+        })
         ->when($company, function($query, $company){
             $query->where('company_candidates.company_id', $company);
         })
-        ->when($checkup_date, function($query, $checkup_date){
-            $checkup_date = explode('to', $checkup_date);
-            $startDate = Carbon::parse($checkup_date[0]);
-            $endDate = Carbon::parse($checkup_date[1] ?? $checkup_date[0])->addDay();
-            $query->whereBetween('medical_checkups.checkup_date', [$startDate, $endDate]);
+        ->when($selected_date, function($query, $selected_date){
+            $selected_date = explode('to', $selected_date);
+            $startDate = Carbon::parse($selected_date[0]);
+            $endDate = Carbon::parse($selected_date[1] ?? $selected_date[0])->addDay();
+            $query->whereBetween('visa_processes.created_at', [$startDate, $endDate]);
         });
 
         return DataTables::of($companyCandidates)
@@ -143,7 +149,7 @@ class CompanyAccessApidata
             })
             ->addColumn('action', function($row){
                 $showUrl = route('company-officer.show-candidate', $row->id);
-                $action = '<a href="'.$showUrl.'">View Details</a>'.$row->id;
+                $action = '<a href="'.$showUrl.'">View Details</a>';
                 return $action;
             })
             ->rawColumns(['DT_RowIndex', 'profile', 'candidate_info', 'medical_status', 'company_info', 'logo', 'action', 'selected'])
