@@ -17,8 +17,8 @@
                         </div>
                     </div>
                     <div>
-                        <h5 class="mb-0">Candidate/Visa Process</h5>
-                        <span>Candidate/Visa Process List Information</span>
+                        <h5 class="mb-0">Candidates</h5>
+                        <span>Candidates List</span>
                     </div>
                 </div>                
             </div>

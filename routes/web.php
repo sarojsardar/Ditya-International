@@ -1,27 +1,29 @@
 <?php
 
-use App\Http\Controllers\Backend\CandidateController;
-use App\Http\Controllers\Backend\CategoryController;
-use App\Http\Controllers\Backend\EducationTypeController;
-use App\Http\Controllers\Backend\GenderController;
-use App\Http\Controllers\Backend\CompanyController;
-use App\Http\Controllers\Backend\CompanyDemandController;
-use App\Http\Controllers\Backend\GalleryController;
-use App\Http\Controllers\Backend\LanguageController;
-use App\Http\Controllers\Backend\MasterSearchController;
-use App\Http\Controllers\Backend\MedicalController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\Backend\NewsController;
-use App\Http\Controllers\Backend\PortfolioController;
-use App\Http\Controllers\Backend\ProfileController;
-use App\Http\Controllers\Backend\ServiceController;
-use App\Http\Controllers\Backend\SiteSettingController;
+use App\Http\Controllers\Backend\YearController;
+use App\Http\Controllers\Backend\StaffController;
+use App\Http\Controllers\Backend\GenderController;
 use App\Http\Controllers\Backend\SliderController;
 use App\Http\Controllers\Backend\SplashController;
-use App\Http\Controllers\Backend\StaffController;
+use App\Http\Controllers\Backend\CompanyController;
+use App\Http\Controllers\Backend\GalleryController;
+use App\Http\Controllers\Backend\MedicalController;
+use App\Http\Controllers\Backend\ProfileController;
+use App\Http\Controllers\Backend\ServiceController;
+use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\LanguageController;
+use App\Http\Controllers\Backend\CandidateController;
+use App\Http\Controllers\Backend\PortfolioController;
 use App\Http\Controllers\Backend\WebcontentController;
-use App\Http\Controllers\Backend\YearController;
-use App\Http\Controllers\TestimonialController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Backend\SiteSettingController;
+use App\Http\Controllers\Backend\MasterSearchController;
+use App\Http\Controllers\Backend\AllUserAccessController;
+use App\Http\Controllers\Backend\CompanyDemandController;
+use App\Http\Controllers\Backend\EducationTypeController;
+use App\Http\Controllers\Backend\AllOfficerAccessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -276,7 +278,13 @@ Route::middleware(['auth:web'])->prefix('/user/testimonials')->group(function(){
 
 
 
+// new developed for the all user candidate
 
+Route::group(['prefix'=>'all-officer', 'as'=>'all-officer.'], function(){
+    Route::group(['prefix'=>'candidate'], function(){
+        Route::get('/', [AllOfficerAccessController::class, 'getCandidates'])->name('candidate');
+    });
+});
 
 
 
