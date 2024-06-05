@@ -18,8 +18,8 @@
                         </div>
                     </div>
                     <div>
-                        <h5 class="mb-0">Candidate/Medical Process</h5>
-                        <span>Candidate/Medical Process List Information</span>
+                        <h5 class="mb-0">Candidate/Visa Process</h5>
+                        <span>Candidate/Visa Process List Information</span>
                     </div>
                 </div>
                 
@@ -66,7 +66,7 @@
                             </div>
         
                             <div class="col-md-12">
-                                <button type="button" class="btn btn-primary btn-sm" id="proceed-btn-to-visa-process">Upload Visa</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-cnage-visa-process">Change Visa Status</button>
                             </div>
                        </div>
                     </form>
@@ -81,8 +81,9 @@
                         <table class="table table table-bordered dt-responsive nowrap dataTable no-footer dtr-inline" id="company-list-datatable">
                             <thead>
                             <tr>
+                                <th>S.N</th>
                                 <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
-                                <th>Status</th>
+                                <th>Visa Status</th>
                                 <th>Candidate</th>
                                 <th>Candidate Profile</th>
                                 <th>Action</th>
@@ -102,18 +103,36 @@
 
     <div class="modal fade" id="procees-to-visa-process" tabindex="-1" role="dialog" aria-labelledby="procees-to-visa-processLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form action="{{route('document-officer.proceed-to-visa')}}" method="post" id="procees-to-visa-process">
+            <form action="{{route('company-officer.proceed-to-visa')}}" method="post" id="procees-to-visa-process" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="procees-to-visa-processLabel">Proceed to Visa</h5>
                     </div>
                     <div class="modal-body">
-                        <p id="status-paragraph" class="text-danger">are You sure Want To Proceed, You Could Not Revert This Action</p>
+                        <p id="status-paragraph" class="text-danger">Are You sure Want To Change Status, You Could Not Revert This Action</p>
                         <input type="hidden" id="all_candidates" name="all_candidates" class="form-control">
+                        <div class="form-group">
+                            <label for="">Status <span class="text-danger">*</span></label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="Successed">Successed</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group reason-div d-none">
+                            <label for="">Reason <span class="text-danger">*</span></label>
+                            <textarea name="reason" id="reason" rows="3" class="form-control"></textarea>
+                        </div>
+
+                        <div class="form-group visa-div d-block">
+                            <p>Note: Please Upload in PDF format</p>
+                            <label for="">Visa File <span class="text-danger">*</span></label>
+                            <input type="file" name="visa" class="form-control">
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Proceed To Visa Process</button>
+                        <button class="btn btn-primary" type="submit">Change Status</button>
                         <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>    
@@ -162,20 +181,20 @@
                 }
             },
             columns: [
-                // { 
-                //     "data": "id", 
-                //     "orderable": false, 
-                //     "searchable": false, 
-                //     "render": function(data, type, row) {
-                //         console.log(row);
-                //         return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
-                //     }
-                // },
                 {
                     'data' : 'DT_RowIndex'
                 },
+                { 
+                    "data": "id", 
+                    "orderable": false, 
+                    "searchable": false, 
+                    "render": function(data, type, row) {
+                        console.log(row);
+                        return (row.document_status == 'Completed' && (row.visa_status !== null && row.visa_status !== '' && row.visa_status !== undefined && row.visa_status !== "Successed" && row.visa_status !== "Rejected")) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                    }
+                },
                 {
-                    'data':'document_status'
+                    'data':'visa_status'
                 },
                 {
                     'data' : 'candidate_info'
@@ -203,37 +222,22 @@
             }
         });
 
-        $(document).on('click', '.btn-action-status', function(e){
-            e.preventDefault();
-            let status = $(this).data('value');
-            var statusAction = "{{ route('medical-officer.update-checkup-status', '#medical_id') }}";
-            let medical_checkup = $(this).data('medical_checkup');
-            let candidate =  $(this).data('candidate');
-            let confirmation = `
-                    <span class="text-red"> </span>You are going to update the status of candiate, This action can not be reversed, So please read carefully and update this</span>
-                    <br/>
-                    Cndidate:${candidate}
-                    <br/>
-                    Status: ${status}
-                    `;
-            statusAction = statusAction.replace('#medical_id', medical_checkup);
-            $('#status-form').attr('action', statusAction);
-            $('#status-paragraph').html(confirmation);
-            $('#status-input').val(status);
-            $('#update-medical-status').modal('show');
-        });
-
         flatpickr(".date_range", {
             mode:'range',
             showMonths:2,
         });
 
-
+        $(document).on('change', '#status', function(e){
+            e.preventDefault();
+            $('.reason-div').toggleClass(['d-none', 'd-block']);
+            $('.visa-div').toggleClass(['d-none', 'd-block']);
+        });
+        
         function selectAll(source) {
             $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
         }
 
-        $(document).on('click', '#proceed-btn-to-visa-process', function(e){
+        $(document).on('click', '#btn-cnage-visa-process', function(e){
             e.preventDefault();
             const selectedCandidates = [];
             const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selectedCandidates[]"]:checked');

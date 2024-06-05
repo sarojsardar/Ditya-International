@@ -30,7 +30,6 @@ class CompanyAccessApidata
             $company = Company::where('user_id', auth()->user()->id)->latest()->first()?->id;
         }
 
-        
         $companyCandidates = CompanyCandidate::query()
         ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
         ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
@@ -88,23 +87,17 @@ class CompanyAccessApidata
                 'document_processes.status as document_status',
                 'visa_processes.status as visa_status',
             ])
+        
+            
+        // This is for only where the visa process is exists
+        ->where('visa_processes.id', '!=', null)
+
         ->where([
             'company_candidates.demand_status'=>'Interview',
             'company_candidates.interview_status'=>'Selected',
         ])
         ->when($demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
-        })
-        ->when($status, function($query, $status){
-            if($status == "All"){
-
-            } elseif($status == "Scheduled"){
-                $query->wnereIn('medical_checkups.is_tested', '!=',  null);
-            }elseif($status == "Tested"){
-                $query->where('is_tested', true);
-            }else{
-                $query->where('medical_checkups.status', $status);
-            }
         })
         ->when($company, function($query, $company){
             $query->where('company_candidates.company_id', $company);
@@ -121,16 +114,6 @@ class CompanyAccessApidata
             ->addColumn('checkup_date', function($row){
                 return Carbon::parse($row->checkup_date)->format('Y-m-d g:i A');
             })
-            ->addColumn('medical_status', function($row){
-                $returnString = "Not Tested";
-                if($row->medical_status == "Fit"){
-                    $returnString = '<span class="badge bg-primary text-white">'.$row->medical_status.'</span>';
-                }
-                if($row->medical_status == "Unfit"){
-                    $returnString = '<span class="badge bg-danger text-white">'.$row->medical_status.'</span>';
-                }
-                return $returnString;
-            })
             ->addColumn('company_info', function($row){
                 $return_string = '
                     <div>
@@ -141,12 +124,8 @@ class CompanyAccessApidata
                 ';
                 return $return_string;
             })
-            ->addColumn('logo', function($row){
-                $url = url('/storage/uploads/company-logo/'. $row->company_logo);
-                return "<img src='{$url}' alt='company logo' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
-            })
             ->addColumn('candidate_info', function($row){
-                $showUrl = route('document-officer.show-candidate', $row->id);
+                $showUrl = route('company-officer.show-candidate', $row->id);
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Name:<a href="'.$showUrl.'">'.$row->candidate_full_name.'</a></p>
@@ -163,8 +142,8 @@ class CompanyAccessApidata
                 return "<img src='{$url}' alt='Profile Picture' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
             })
             ->addColumn('action', function($row){
-                $showUrl = route('document-officer.show-candidate', $row->id);
-                $action = '<a href="'.$showUrl.'">View Details</a>';
+                $showUrl = route('company-officer.show-candidate', $row->id);
+                $action = '<a href="'.$showUrl.'">View Details</a>'.$row->id;
                 return $action;
             })
             ->rawColumns(['DT_RowIndex', 'profile', 'candidate_info', 'medical_status', 'company_info', 'logo', 'action', 'selected'])

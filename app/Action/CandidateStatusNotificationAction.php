@@ -121,4 +121,11 @@ class CandidateStatusNotificationAction
 
         // Notification must be developed
     }
+
+
+
+    public function updateVisaStatus($processIds, $visaType="Proceed")
+    {
+           // Notification must be developed
+    }
 }

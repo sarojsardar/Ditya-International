@@ -28,6 +28,7 @@ class DocumentAccessController extends Controller
 
         if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
             abort(401);
+            exit;
         }
         $medicals = auth()->user()->medicals;
         $companies = Company::orderBy('name')->get();
@@ -43,6 +44,7 @@ class DocumentAccessController extends Controller
     {
         if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
             abort(401);
+            exit;
         }
         $companyCandidate = CompanyCandidate::findOrFail($companyCandidateId);
 
@@ -97,8 +99,10 @@ class DocumentAccessController extends Controller
     }
     public function updateDocumentStatus(Request $request, $companyCandidateId)
     {
+        
         if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
             abort(401);
+            exit;
         }
         $validator = Validator::make($request->all(), [
             'status'=>'required|in:Completed,In Progress',
@@ -119,6 +123,10 @@ class DocumentAccessController extends Controller
     }
     public function proceedToVisa(Request $request)
     {
+        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+            abort(401);
+            exit;
+        }
         $validator = Validator::make($request->all(), [
             'all_candidates'=>'required',
         ]);
@@ -156,6 +164,10 @@ class DocumentAccessController extends Controller
     }
     public function notifyDocumentRequirement(Request $request, $companyCandidateId)
     {
+        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+            abort(401);
+            exit;
+        }
         $companyCandidate = CompanyCandidate::findOrFail($companyCandidateId);
         $validator = Validator::make($request->all(), [
             'element_ids'=>'required|array',

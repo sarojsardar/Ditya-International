@@ -51,7 +51,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/document_officer.php'));
 
             Route::middleware('web')
-                ->prefix('user/company')
+                ->prefix('user/company-officer')
                 ->group(base_path('routes/company_officer.php'));
 
 
