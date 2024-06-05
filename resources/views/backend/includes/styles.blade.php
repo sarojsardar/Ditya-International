@@ -48,6 +48,13 @@
 <!-- Custom CSS -->
 {{-- <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" /> --}}
 
+<!-- replace later -->
+<style>
+      .template-customizer-styles-options > :nth-child(3), .template-customizer-directions {
+            display: none;
+      }
+</style>
+
 <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
 <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
