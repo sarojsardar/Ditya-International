@@ -755,12 +755,12 @@
   opacity: 0;
 }
 .dark-style .apexcharts-canvas .apexcharts-tooltip {
-  background: #282a42;
+  background: #004D92;
   border-color: #464963;
   box-shadow: 0 0.25rem 0.875rem 0 rgba(16, 17, 33, 0.26);
 }
 .dark-style .apexcharts-canvas .apexcharts-tooltip .apexcharts-tooltip-title {
-  background: #282a42;
+  background: #004D92;
   border-color: #464963;
   font-family: var(--bs-font-sans-serif) !important;
 }
@@ -775,14 +775,14 @@
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip {
-  background: #282a42;
+  background: #004D92;
   color: #d7d8ed;
   border-color: #464963;
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-bottom:after, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-bottom:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-bottom:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-yaxistooltip-bottom:after {
-  border-bottom-color: #282a42;
+  border-bottom-color: #004D92;
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-bottom:before, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-bottom:before,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-bottom:before,
@@ -792,7 +792,7 @@
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-left:after, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-left:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-left:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-yaxistooltip-left:after {
-  border-left-color: #282a42;
+  border-left-color: #004D92;
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-left:before, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-left:before,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-left:before,
@@ -802,7 +802,7 @@
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-right:after, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-right:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-right:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-yaxistooltip-right:after {
-  border-right-color: #282a42;
+  border-right-color: #004D92;
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-right:before, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-right:before,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-right:before,
@@ -812,7 +812,7 @@
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-top:after, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-top:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-top:after,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-yaxistooltip-top:after {
-  border-top-color: #282a42;
+  border-top-color: #004D92;
 }
 .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-xaxistooltip-top:before, .dark-style .apexcharts-canvas .apexcharts-xaxistooltip.apexcharts-yaxistooltip-top:before,
 .dark-style .apexcharts-canvas .apexcharts-yaxistooltip.apexcharts-xaxistooltip-top:before,

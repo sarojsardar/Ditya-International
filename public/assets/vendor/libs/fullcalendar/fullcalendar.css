@@ -408,7 +408,7 @@ html[dir=rtl] .fc .fc-toolbar .fc-button-group .fc-button:last-child {
   border-color: #464963;
 }
 .dark-style .fc .fc-popover {
-  background-color: #282a42;
+  background-color: #004D92;
   border: 0;
 }
 .dark-style .fc .fc-popover .fc-popover-header {
@@ -419,7 +419,7 @@ html[dir=rtl] .fc .fc-toolbar .fc-button-group .fc-button:last-child {
 }
 .dark-style .fc .fc-list .fc-list-table th {
   border: 0;
-  background: #282a42;
+  background: #004D92;
 }
 .dark-style .fc .fc-list .fc-list-table .fc-list-event {
   cursor: pointer;
@@ -438,7 +438,7 @@ html[dir=rtl] .fc .fc-toolbar .fc-button-group .fc-button:last-child {
   border-top: 1px solid #464963;
 }
 .dark-style .fc .fc-list .fc-list-empty {
-  background-color: #282a42;
+  background-color: #004D92;
 }
 .dark-style .fc table,
 .dark-style .fc .fc-timegrid-axis,

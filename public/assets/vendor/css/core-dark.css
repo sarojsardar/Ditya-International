@@ -71,7 +71,7 @@
   --bs-body-line-height: 1.375;
   --bs-body-color: #b2b3ca;
   --bs-body-color-rgb: 178, 179, 202;
-  --bs-body-bg: #282a42;
+  --bs-body-bg: #004D92;
   --bs-body-bg-rgb: 40, 42, 66;
   --bs-emphasis-color: #30334e;
   --bs-emphasis-color-rgb: 48, 51, 78;
@@ -2849,10 +2849,10 @@ textarea.form-control-lg {
   outline: 0;
 }
 .form-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 1px #282a42, none;
+  box-shadow: 0 0 0 1px #004D92, none;
 }
 .form-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 1px #282a42, none;
+  box-shadow: 0 0 0 1px #004D92, none;
 }
 .form-range::-moz-focus-outer {
   border: 0;
@@ -7409,11 +7409,11 @@ a.bg-lightest:hover, a.bg-lightest:focus {
 }
 
 .invert-text-white {
-  color: #282a42 !important;
+  color: #004D92 !important;
 }
 
 .invert-text-white[href]:hover:hover, .invert-text-white[href]:hover:focus {
-  color: #282a42 !important;
+  color: #004D92 !important;
 }
 
 .invert-text-dark {
@@ -7425,11 +7425,11 @@ a.bg-lightest:hover, a.bg-lightest:focus {
 }
 
 .invert-bg-white {
-  background-color: #282a42 !important;
+  background-color: #004D92 !important;
 }
 
 a.invert-bg-white:hover, a.invert-bg-white:focus {
-  background-color: #282a42 !important;
+  background-color: #004D92 !important;
 }
 
 .invert-bg-dark {
@@ -7445,7 +7445,7 @@ a.invert-bg-dark:hover, a.invert-bg-dark:focus {
 }
 
 .invert-border-white {
-  border-color: #282a42 !important;
+  border-color: #004D92 !important;
 }
 
 .container-p-x {
@@ -15391,7 +15391,7 @@ button.list-group-item-gray.active {
 
 .bg-body {
   --bs-bg-opacity: 1;
-  background-color: #282a42 !important;
+  background-color: #004D92 !important;
 }
 
 .bg-transparent {
@@ -25179,7 +25179,7 @@ html:not(.layout-menu-fixed) .menu-inner-shadow {
   padding-right: 1.25rem;
 }
 .layout-navbar-fixed .layout-page:not(.window-scrolled) .layout-navbar.navbar-detached .search-input {
-  background-color: #282a42;
+  background-color: #004D92;
 }
 .layout-navbar.navbar-detached .search-input {
   transition: padding 0.2s ease, background-color 0.18s ease;
@@ -26774,7 +26774,7 @@ html:not(.layout-footer-fixed) .content-wrapper {
   justify-content: center;
   border-radius: 50%;
   background-color: #2f3259;
-  box-shadow: 0 0 0 10px #282a42;
+  box-shadow: 0 0 0 10px #004D92;
 }
 .timeline .timeline-item .timeline-indicator i {
   color: #666cff;

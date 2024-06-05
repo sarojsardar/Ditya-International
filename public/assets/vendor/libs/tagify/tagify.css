@@ -611,10 +611,10 @@
 }
 
 .dark-style .tagify__dropdown.users-list .tagify__dropdown__item__avatar-wrap {
-  background: #282a42;
+  background: #004D92;
 }
 .dark-style .tagify__tag .tagify__tag__avatar-wrap {
-  background: #282a42;
+  background: #004D92;
 }
 .dark-style .tagify__dropdown.users-list .addAll {
   border-bottom: 1px solid #464963;
@@ -650,7 +650,7 @@
 
 .dark-style .tags-inline .tagify__dropdown__item {
   border: 1px solid #464963;
-  background: #282a42;
+  background: #004D92;
   color: #b2b3ca;
 }
 .dark-style .tags-inline .tagify__dropdown__item--active {

@@ -621,16 +621,16 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
   font-size: 0.8125rem;
   color: #fff;
   border: none;
-  background: #282a42;
+  background: #004D92;
 }
 .light-style .noUi-horizontal .noUi-tooltip::after {
-  border-top: 8px solid #282a42;
+  border-top: 8px solid #004D92;
 }
 .light-style .noUi-vertical .noUi-tooltip::after {
-  border-left: 8px solid #282a42;
+  border-left: 8px solid #004D92;
 }
 .light-style[dir=rtl] .noUi-vertical .noUi-tooltip::after {
-  border-right: 8px solid #282a42;
+  border-right: 8px solid #004D92;
   border-left: 8px solid transparent;
 }
 .light-style .noUi-secondary.noUi-target {
