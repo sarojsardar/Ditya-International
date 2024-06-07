@@ -131,9 +131,6 @@
                     }
                 },
                 {
-                    'data' : 'DT_RowIndex'
-                },
-                {
                     'data':'checkup_date'
                 },
                 {

@@ -37,13 +37,10 @@
                             <thead>
                             <tr>
                                 <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
-                                <th>Checkup Date</th>
-                                <th>Status</th>
-                                <th>Document Status</th>
                                 <th>Candidate</th>
+                                <th>Candidate Profile</th>
                                 <th>Company</th>
                                 <th>Company Logo</th>
-                                <th>Candidate Profile</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
@@ -84,6 +81,7 @@
 
 @push('scripts')
     <script src="{{asset('flatpickr/dist/flatpickr.min.js')}}"></script>
+    <script src="{{asset('axios/dist/axios.js')}}"></script>
     <script>
 
         let table = $('#company-list-datatable').DataTable({
@@ -95,10 +93,17 @@
             ajax: {
                 url: "{{route('all-officer.candidate')}}",
                 data: function(d) {
-                    d.medical = $('#medical').val();
+
                     d.company = $('#company').val();
+                    d.demand = $('#demand').val();
+                    d.medical = $('#medical').val();
                     d.checkup_date = $('#checkup_date').val();
-                    d.status = $('#status').val();
+                    d.selected_date = $('#selected_date').val();
+                    d.medical_status = $('#medical_status').val();
+                    d.document_status = $('#document_status').val();
+                    d.visa_status = $('#visa_status').val();
+                    d.interview_status = $('#interview_status').val();
+                    d.evisa_status = $('#evisa_status').val();
                 },
                 type: 'GET',
                 tryCount : 0,
@@ -126,24 +131,14 @@
                     "orderable": false, 
                     "searchable": false, 
                     "render": function(data, type, row) {
-                        console.log(row);
                         return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
                     }
                 },
                 {
-                    'data' : 'DT_RowIndex'
-                },
-                {
-                    'data':'checkup_date'
-                },
-                {
-                    'data':'medical_status'
-                },
-                {
-                    'data':'document_status'
-                },
-                {
                     'data' : 'candidate_info'
+                },
+                {
+                    'data' : 'profile'
                 },
                 {
                     'data':'company_info'
@@ -152,27 +147,11 @@
                     'data' : 'logo'
                 },
                 {
-                    'data' : 'profile'
-                },  
-                {
                     'data' : 'action'
                 },
             ]
         });
 
-
-        $(document).on('click', '#filter-btn', function(e){
-            e.preventDefault();
-            table.draw();
-            let medical = $('#medical').val();
-            let company = $('#company').val();
-            let checkup_date = $('#checkup_date').val();
-            let status = $('#status').val();
-            if(medical !== null || medical !== undefined || medical !== '' || company !== null || company !== undefined || company !== '' || checkup_date !== null || checkup_date !== undefined || checkup_date !== '' || status !== null || status !== undefined || status !== ''){
-                console.log(table);
-                $('#company-list-datatable').DataTable().ajax.reload();
-            }
-        });
 
         $(document).on('click', '.btn-action-status', function(e){
             e.preventDefault();
@@ -199,7 +178,6 @@
             showMonths:2,
         });
 
-
         function selectAll(source) {
             $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
         }
@@ -220,13 +198,60 @@
         });
 
 
-        $(document).on('click', '#clear_filter', function(e){
+
+
+       
+        // for the filter button
+        $(document).on('click', '#filter-btn', function(e){
             e.preventDefault();
-            $('#medical').val('');
-            $('#company').val('');
-            $('#checkup_date').val('');
-            $('#status').val('');
             $('#company-list-datatable').DataTable().ajax.reload();
         });
+
+
+        $(document).on('click', '#clear_filter', function(e){
+            e.preventDefault();
+            d.company = $('#company').val();
+            $('#demand').val();
+            $('#medical').val();
+            $('#checkup_date').val();
+            $('#selected_date').val();
+            $('#medical_status').val();
+            $('#document_status').val();
+            $('#visa_status').val();
+            $('#interview_status').val();
+            $('#evisa_status').val();
+            $('#company-list-datatable').DataTable().ajax.reload();
+        });
+
+
+        $(document).on('change', '#company', function(e){
+            e.preventDefault();
+            fetchDemand();
+        })
+
+        function fetchDemand(){
+            let company = $('#company').val();
+            axios.get('/all-officer/candidate/get-demand', {
+                params:{
+                    'company':company,
+                }
+            }).then((response)=>{
+                let demands = response.data.data;
+                let htmlString = '<option value="">Please Select</option>';
+                demands.forEach(demand => {
+                    htmlString += `<option value="${demand.id}">${demand.demand_code} (${demand.status})</option>`; 
+                });
+                $('#demand').html(htmlString);
+
+            }).catch((error)=>{
+                console.log(error);
+            }).finally(()=>{
+                
+            })
+        }
+
+        
+
+        
     </script>
 @endpush

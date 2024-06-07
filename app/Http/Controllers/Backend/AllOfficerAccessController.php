@@ -34,7 +34,26 @@ class AllOfficerAccessController extends Controller
         if($request->ajax()){
             return (new AllOfficerAccessApidata($request))->getInCandidates();
         }
-        return view('backend.pages.all-officer.in-check', ['companies'=>$companies, 'medicals'=>$medicals]);
+
+        $params = [
+            'show_filter'=>true,
+            'show_medical'=>false,
+            'show_company'=>true,
+            'show_demand'=>true,
+            'show_checkup_date'=>true,
+            'show_selected_date'=>true,
+            'show_medical_status'=>true,
+            'show_document_status'=>true,
+            'show_visa_status'=>true,
+            'show_visa_status'=>true,
+            'show_interview_status'=>true,
+            'show_evisa_status'=>true,
+        ];
+        return view('backend.pages.all-officer.in-check', [
+            'params'=>$params,
+            'companies'=>$companies,
+            'medicals'=>$medicals,
+        ]);
     }
 
     public function showDetails($companyCandidateId)
@@ -182,5 +201,17 @@ class AllOfficerAccessController extends Controller
             session()->flash('error', $th->getMessage());
             return back();
         }
+    }
+
+
+    public function getDemands(Request $request)
+    {
+        $company = Company::findOrFail($request->company);
+        $companyUser = User::where('id', $company->user_id)->firstOrFail();
+        $demands = CompanyDemand::where('company_id', $companyUser->id)->orderBy('demand_code')->get();
+        return response()->json([
+            'data'=>$demands,
+            'message'=>"Demand List",
+        ], 200);
     }
 }

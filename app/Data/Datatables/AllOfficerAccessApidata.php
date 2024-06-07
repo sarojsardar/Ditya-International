@@ -17,12 +17,8 @@ class AllOfficerAccessApidata
 
     public function getInCandidates()
     {
-        $company = request()->company;
-        $demand = request()->demand;
-        $status = request()->status;
-        $checkup_date = request()->checkup_date;
-
-
+        $request = request();
+        // dd($request->all());
         $companyCandidates = CompanyCandidate::query()
         ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
         ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
@@ -48,9 +44,19 @@ class AllOfficerAccessApidata
                  ->on('visa_processes.company_id', '=', 'company_candidates.company_id')
                  ->on('visa_processes.demand_id', '=', 'company_candidates.demand_id');
         })
+
+        ->leftJoin('interviews', function ($join) {
+            $join->on('interviews.user_id', '=', 'candidates.id')
+                 ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('evisa_processes', function ($join) {
+            $join->on('evisa_processes.user_id', '=', 'candidates.id')
+                 ->on('evisa_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('evisa_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
         ->select([
                 'company_candidates.*',
-
 
                 'companies.name as company_name',
                 'companies.address as company_address',
@@ -73,6 +79,9 @@ class AllOfficerAccessApidata
                 'candidate_information.contact as candidate_contact',
                 'candidate_information.profile_picture as candidate_profile_picture',
 
+                // it can be change after the status usable 
+                // 'interviews.status as interview_status',
+
                 'medical_checkups.medical_id',
                 'medical_checkups.checkup_date',
                 'medical_checkups.status as medical_status',
@@ -80,35 +89,72 @@ class AllOfficerAccessApidata
 
                 'document_processes.status as document_status',
                 'visa_processes.status as visa_status',
+
+                'evisa_processes.status as evisa_status',
             ])
         ->where([
-            'company_candidates.demand_status'=>'Interview',
-            'company_candidates.interview_status'=>'Selected',
+            // 'company_candidates.demand_status'=>'Interview',
+            // 'company_candidates.interview_status'=>'Selected',
         ])
-        ->when($demand, function($query, $demand){
+        ->when($request->company, function($query, $company){
+            $query->where('companies.id', $company);
+        })
+        ->when($request->demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
         })
-        ->when($status, function($query, $status){
+        ->when($request->medical_status, function($query, $status){
             if($status == "All"){
 
             } elseif($status == "Scheduled"){
-                $query->wnereIn('medical_checkups.is_tested', '!=',  null);
+                $query->whereIn('medical_checkups.is_tested',  false)->where('medical_checkups.status', 'N/A');
             }elseif($status == "Tested"){
                 $query->where('is_tested', true);
             }else{
                 $query->where('medical_checkups.status', $status);
             }
         })
-        ->when($company, function($query, $company){
-            $query->wnereIn('company_candidates.company_id', $company);
+        ->when($request->selected_date, function($query, $selected_date){
+            $selected_date = explode('to', $selected_date);
+            $startDate = Carbon::parse($selected_date[0]);
+            $endDate = Carbon::parse($selected_date[1] ?? $selected_date[0])->addDay();
+            $query->where('interviews.is_selected', true)->whereBetween('interviews.updated_date', [$startDate, $endDate]);
         })
-        ->when($checkup_date, function($query, $checkup_date){
+        ->when($request->interview_status, function($query, $status){
+            switch ($status) {
+                case 'all':
+                    // No additional conditions
+                    break;
+                case 'scheduled':
+                    $query->where('interviews.is_taken', false)->where('is_selected', false);
+                    break;
+                case 'selected':
+                    $query->where('interviews.is_taken', true)->where('is_selected', true);
+                    break;
+                case 'rejected':
+                    $query->where('interviews.is_taken', true)->where('is_selected', false);
+                    break;
+                case 'KIV':
+                    $query->where('interviews.is_taken', true)->where('company_candidates.interview_status', 'KIV'); 
+                    break;
+                default:
+                    // No additional conditions
+                    break;
+            }
+        })
+        ->when($request->checkup_date, function($query, $checkup_date){
             $checkup_date = explode('to', $checkup_date);
             $startDate = Carbon::parse($checkup_date[0]);
             $endDate = Carbon::parse($checkup_date[1] ?? $checkup_date[0])->addDay();
             $query->whereBetween('medical_checkups.checkup_date', [$startDate, $endDate]);
+        })
+        ->when($request->visa_status, function($query, $visa_status){
+            $query->where('visa_processes.status', $visa_status);
+        })
+        ->when($request->evisa_status, function($query, $evisa_status){
+            $query->where('evisa_processes.status', $evisa_status);
         });
-        
+
+
 
         return DataTables::of($companyCandidates)
             ->addIndexColumn()
