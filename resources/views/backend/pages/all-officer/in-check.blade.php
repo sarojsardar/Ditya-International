@@ -210,7 +210,7 @@
 
         $(document).on('click', '#clear_filter', function(e){
             e.preventDefault();
-            d.company = $('#company').val();
+            $('#company').val();
             $('#demand').val();
             $('#medical').val();
             $('#checkup_date').val();

@@ -108,7 +108,7 @@ if(!isset($params)){
                                 <option value="Scheduled">Scheduled</option>
                                 <option value="Tested">Tested</option>
                                 <option value="Unfit">Unfit</option>
-                                <option value="Fit">Fit</option>
+                                <option value="Fit" @if(@$medical_selected == "Fit")  selected @endif>Fit</option>
                                 <option value="All">All</option>
                             </select>
                         </div>

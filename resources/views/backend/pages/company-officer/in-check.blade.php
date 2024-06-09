@@ -66,9 +66,9 @@
                                     <label for="">Status:</label>
                                     <select name="status" id="status" class="form-control">
                                         <option value="">Select</option>
-                                        <option value="Pending">(N/A)/Pending</option>
-                                        <option value="Successed">(N/A)/Successed</option>
-                                        <option value="Rejected">(N/A)/Rejected</option>
+                                        <option value="Pending">(NA)/Pending</option>
+                                        <option value="Successed">Successed</option>
+                                        <option value="Rejected">Rejected</option>
                                     </select>
                                 </div>
                             </div>

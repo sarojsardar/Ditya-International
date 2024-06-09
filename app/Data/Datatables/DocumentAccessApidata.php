@@ -21,7 +21,8 @@ class DocumentAccessApidata
     {
         $company = request()->company;
         $demand = request()->demand;
-        $status = request()->status;
+        $medical_status = request()->medical_status;
+        $document_status = request()->document_status;
         $checkup_date = request()->checkup_date;
 
 
@@ -52,7 +53,6 @@ class DocumentAccessApidata
         })
         ->select([
                 'company_candidates.*',
-
 
                 'companies.name as company_name',
                 'companies.address as company_address',
@@ -90,19 +90,19 @@ class DocumentAccessApidata
         ->when($demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
         })
-        ->when($status, function($query, $status){
-            if($status == "All"){
+        ->when($medical_status, function($query, $medical_status){
+            if($medical_status == "All"){
 
-            } elseif($status == "Scheduled"){
-                $query->wnereIn('medical_checkups.is_tested', '!=',  null);
-            }elseif($status == "Tested"){
+            } elseif($medical_status == "Scheduled"){
+                $query->where('medical_checkups.is_tested', '!=',  null);
+            }elseif($medical_status == "Tested"){
                 $query->where('is_tested', true);
             }else{
-                $query->where('medical_checkups.status', $status);
+                $query->where('medical_checkups.status', $medical_status);
             }
         })
         ->when($company, function($query, $company){
-            $query->wnereIn('company_candidates.company_id', $company);
+            $query->where('companies.id', $company);
         })
         ->when($checkup_date, function($query, $checkup_date){
             $checkup_date = explode('to', $checkup_date);

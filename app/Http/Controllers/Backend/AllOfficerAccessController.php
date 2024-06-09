@@ -42,12 +42,11 @@ class AllOfficerAccessController extends Controller
             'show_demand'=>true,
             'show_checkup_date'=>true,
             'show_selected_date'=>true,
-            'show_medical_status'=>true,
-            'show_document_status'=>true,
+            'show_medical_status'=>false,
+            'show_document_status'=>false,
             'show_visa_status'=>true,
-            'show_visa_status'=>true,
-            'show_interview_status'=>true,
-            'show_evisa_status'=>true,
+            'show_interview_status'=>false,
+            'show_evisa_status'=>false,
         ];
         return view('backend.pages.all-officer.in-check', [
             'params'=>$params,

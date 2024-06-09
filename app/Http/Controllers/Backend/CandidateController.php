@@ -928,8 +928,14 @@ class CandidateController extends Controller
     public function detail($candidateId)
     {
         // Fetch the user with related details eagerly loaded to optimize queries
-        $userDetails = User::with(['userDetail', 'educationalQualification', 'passportDetail', 'workExperience', 'languageDetail', 'categoryDetail'])->where('id', $candidateId)->first();
-
+        $userDetails = User::with([
+            'userDetail', 
+            'educationalQualification', 
+            'passportDetail', 
+            'workExperience', 
+            'languageDetail', 
+            'categoryDetail'
+            ])->where('id', $candidateId)->first();
         // Check if the user was found
         if (!$userDetails) {
             return redirect()->route('all-demand.index', $candidateId)->with('error', 'Candidate record not found');
@@ -974,7 +980,17 @@ class CandidateController extends Controller
 
     public function userDetails($candidateId)
     {
-        $userDetails = User::with(['userDetail', 'educationalQualification', 'passportDetail', 'workExperience', 'languageDetail','uploadPhoto','BankDetail','resumeDetail','categoryDetail'])->where('id', $candidateId)->first();
+        $userDetails = User::with([
+            'userDetail', 
+            'educationalQualification', 
+            'passportDetail', 
+            'workExperience', 
+            'languageDetail',
+            'uploadPhoto',
+            'BankDetail',
+            'resumeDetail',
+            'categoryDetail'
+            ])->where('id', $candidateId)->first();
 
         // Check if the user was found
 

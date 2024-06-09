@@ -84,8 +84,8 @@
                                     </ul>
                                 </div>
                                 <div class="button-group" style="flex-shrink: 0;"> <!-- Ensure the buttons don't shrink -->
-                                @if(auth('web')->user()->hasRole('Manager'))
 
+                                @if(auth('web')->user()->hasRole('Manager'))
                                    @if(optional($companyCandidate)->interview_status == 'Accepted')
                                     {{-- Show this button if the interview status is Accept --}}
                                     <button class='btn btn-sm btn-primary change-status' data-id="{{$userDetails->id}}" data-status="{{$userDetails->demand_status}}">Change Status</button>
@@ -396,8 +396,9 @@
             $actualCandidate = \App\Models\CompanyCandidate::where([
                 'company_id'=>$company?->id,
                 'demand_id'=>$currentDemad?->id,
+                'user_id'=>$companyCandidate?->user_id
             ])->first();
-            
+
             $interview = \App\Models\Interview::where([
                 'demand_id'=>$actualCandidate?->demand_id,
                 'user_id'=>$actualCandidate?->user_id,

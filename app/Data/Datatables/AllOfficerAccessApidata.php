@@ -3,7 +3,10 @@ namespace App\Data\Datatables;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Enum\CandiateAccessEnum;
 use App\Models\CompanyCandidate;
+use Illuminate\Support\Facades\DB;
+use App\Models\Candidate\FinalJobstatus;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -14,11 +17,9 @@ class AllOfficerAccessApidata
     {
         $this->request = $request;
     }
-
-    public function getInCandidates()
+    private function getQueries($type="in_visa")
     {
         $request = request();
-        // dd($request->all());
         $companyCandidates = CompanyCandidate::query()
         ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
         ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
@@ -39,64 +40,52 @@ class AllOfficerAccessApidata
         })
 
 
+        ->leftJoin('interviews', function ($join) {
+            $join->on('interviews.user_id', '=', 'candidates.id')
+                 ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+
         ->leftJoin('visa_processes', function ($join) {
             $join->on('visa_processes.user_id', '=', 'candidates.id')
                  ->on('visa_processes.company_id', '=', 'company_candidates.company_id')
                  ->on('visa_processes.demand_id', '=', 'company_candidates.demand_id');
         })
 
-        ->leftJoin('interviews', function ($join) {
-            $join->on('interviews.user_id', '=', 'candidates.id')
-                 ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
-        })
-
+        
         ->leftJoin('evisa_processes', function ($join) {
             $join->on('evisa_processes.user_id', '=', 'candidates.id')
                  ->on('evisa_processes.company_id', '=', 'company_candidates.company_id')
                  ->on('evisa_processes.demand_id', '=', 'company_candidates.demand_id');
         })
-        ->select([
-                'company_candidates.*',
-
-                'companies.name as company_name',
-                'companies.address as company_address',
-                'companies.logo as company_logo',
-                'companies.country as company_country',
-                'company_user.id as company_user_id',
-
-                'candidates.id as candidate_id',
-                'candidates.email as candidate_email',
-
-                'candidate_details.full_name as candidate_full_name',
-                'candidate_details.permanent_address as candidate_permanent_address',
-                'candidate_details.temporary_address as candidate_temporary_address',
-                'candidate_details.gender as candidate_gender',
-
-                'candidate_information.first_name as candidate_first_name',
-                'candidate_information.last_name as candidate_last_name',
-                'candidate_information.middle_name as middle_name',
-                'candidate_information.full_address as candidate_full_address',
-                'candidate_information.contact as candidate_contact',
-                'candidate_information.profile_picture as candidate_profile_picture',
-
-                // it can be change after the status usable 
-                // 'interviews.status as interview_status',
-
-                'medical_checkups.medical_id',
-                'medical_checkups.checkup_date',
-                'medical_checkups.status as medical_status',
-                'medical_checkups.is_tested',
-
-                'document_processes.status as document_status',
-                'visa_processes.status as visa_status',
-
-                'evisa_processes.status as evisa_status',
-            ])
         ->where([
             // 'company_candidates.demand_status'=>'Interview',
             // 'company_candidates.interview_status'=>'Selected',
-        ])
-        ->when($request->company, function($query, $company){
+        ]);
+
+        switch ($type) {
+            case CandiateAccessEnum::IN_VISA:
+                    $companyCandidates->where([
+                        'company_candidates.demand_status'=>'Interview',
+                        'company_candidates.interview_status'=>'Selected',
+                    ])->where('visa_processes.status', '!=', null);
+                break;
+            case CandiateAccessEnum::IN_DOCUMENT:
+                $companyCandidates->where([
+                    'company_candidates.demand_status'=>'Interview',
+                    'company_candidates.interview_status'=>'Selected',
+                ]);
+                break;
+                
+            case CandiateAccessEnum::IN_MEDICAL:
+                $companyCandidates->where('medical_checkups.id', '!=', null);
+                break;
+                            
+            default:
+                # code...
+                break;
+        }
+        $companyCandidates->when($request->company, function($query, $company){
             $query->where('companies.id', $company);
         })
         ->when($request->demand, function($query, $demand){
@@ -152,24 +141,54 @@ class AllOfficerAccessApidata
         })
         ->when($request->evisa_status, function($query, $evisa_status){
             $query->where('evisa_processes.status', $evisa_status);
-        });
+        })
+        ->when($request->document_status, function($query, $document_status){
+            $query->where('document_processes.status', $document_status);
+        })
 
+        ->select([
+            'company_candidates.*',
 
+            'companies.name as company_name',
+            'companies.address as company_address',
+            'companies.logo as company_logo',
+            'companies.country as company_country',
+            'company_user.id as company_user_id',
 
+            'candidates.id as candidate_id',
+            'candidates.email as candidate_email',
+
+            'candidate_details.full_name as candidate_full_name',
+            'candidate_details.permanent_address as candidate_permanent_address',
+            'candidate_details.temporary_address as candidate_temporary_address',
+            'candidate_details.gender as candidate_gender',
+
+            'candidate_information.first_name as candidate_first_name',
+            'candidate_information.last_name as candidate_last_name',
+            'candidate_information.middle_name as middle_name',
+            'candidate_information.full_address as candidate_full_address',
+            'candidate_information.contact as candidate_contact',
+            'candidate_information.profile_picture as candidate_profile_picture',
+
+            'medical_checkups.medical_id',
+            'medical_checkups.checkup_date',
+            'medical_checkups.status as medical_status',
+            'medical_checkups.is_tested',
+
+            'document_processes.status as document_status',
+            'visa_processes.status as visa_status',
+            'evisa_processes.status as evisa_status',
+        ]);
+
+        return $companyCandidates;
+    }
+    public function getInCandidates()
+    {
+        $companyCandidates = $this->getQueries();
         return DataTables::of($companyCandidates)
             ->addIndexColumn()
             ->addColumn('checkup_date', function($row){
                 return Carbon::parse($row->checkup_date)->format('Y-m-d g:i A');
-            })
-            ->addColumn('medical_status', function($row){
-                $returnString = "Not Tested";
-                if($row->medical_status == "Fit"){
-                    $returnString = '<span class="badge bg-primary text-white">'.$row->medical_status.'</span>';
-                }
-                if($row->medical_status == "Unfit"){
-                    $returnString = '<span class="badge bg-danger text-white">'.$row->medical_status.'</span>';
-                }
-                return $returnString;
             })
             ->addColumn('company_info', function($row){
                 $return_string = '
@@ -187,6 +206,13 @@ class AllOfficerAccessApidata
             })
             ->addColumn('candidate_info', function($row){
                 $showUrl = route('document-officer.show-candidate', $row->id);
+                
+                $final_job_status = "Open To Work/ Not Engaged";
+
+                $finalJobstatus = FinalJobstatus::where('user_id', $row->user_id)->latest()->first();
+                if($finalJobstatus){
+                    $final_job_status = $finalJobstatus->status;
+                }
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Name:<a href="'.$showUrl.'">'.$row->candidate_full_name.'</a></p>
@@ -194,6 +220,12 @@ class AllOfficerAccessApidata
                         <p class="p-0 m-0">Gender: '.$row->candidate_gender.'</p>
                         <p class="p-0 m-0">Email: '.$row->candidate_email.'</p>
                         <p class="p-0 m-0">Contact: '.$row->candidate_contact.'</p>
+                        <p class="p-0 m-0">Interview Status: '.$row->interview_status.'</p>
+                        <p class="p-0 m-0">Medical Status: '.$row->medical_status.'</p>
+                        <p class="p-0 m-0">Document Status: '.$row->document_status.'</p>
+                        <p class="p-0 m-0">Visa Status: '.$row->visa_status.'</p>
+                        <p class="p-0 m-0">Final Job Status: '.$final_job_status.'</p>
+                        
                     </div>
                 ';
                 return $return_string;
@@ -207,7 +239,7 @@ class AllOfficerAccessApidata
                 $action = '<a href="'.$showUrl.'">View Details</a>';
                 return $action;
             })
-            ->rawColumns(['DT_RowIndex', 'profile', 'candidate_info', 'medical_status', 'company_info', 'logo', 'action', 'selected'])
+            ->rawColumns(['DT_RowIndex', 'profile', 'candidate_info', 'company_info', 'logo', 'action', 'selected'])
             ->make(true);
         }
 }

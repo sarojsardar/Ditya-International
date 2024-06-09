@@ -35,7 +35,27 @@ class DocumentAccessController extends Controller
         if($request->ajax()){
             return (new DocumentAccessApidata($request))->getInCandidates();
         }
-        return view('backend.pages.document-officer.in-check', ['companies'=>$companies, 'medicals'=>$medicals]);
+
+        $params = [
+            'show_filter'=>true,
+            'show_medical'=>false,
+            'show_company'=>true,
+            'show_demand'=>true,
+            'show_checkup_date'=>true,
+            'show_selected_date'=>true,
+            'show_medical_status'=>true,
+            'show_document_status'=>false,
+            'show_visa_status'=>false,
+            'show_interview_status'=>false,
+            'show_evisa_status'=>false,
+        ];
+
+        return view('backend.pages.document-officer.in-check', [
+            'medical_selected'=>'Fit',
+            'params'=>$params,
+            'companies'=>$companies,
+            'medicals'=>$medicals,
+        ]);
     }
 
 
