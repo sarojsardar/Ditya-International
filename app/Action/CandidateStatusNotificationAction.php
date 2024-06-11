@@ -128,4 +128,21 @@ class CandidateStatusNotificationAction
     {
            // Notification must be developed
     }
+
+
+    public function updateLabourPermitStatus($labourPermitIds)
+    {
+
+    }
+
+    public function updateEVisaStatus($eVisaIds)
+    {
+
+    }
+
+
+    public function updateETicketStatus($eTicketIds)
+    {
+
+    }
 }

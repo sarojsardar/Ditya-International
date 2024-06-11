@@ -29,6 +29,14 @@
 
         @include('backend.partial.filter-form')
 
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-12">
+                    <button type="button" class="btn btn-primary btn-sm" id="upload-document">Upload Document</button>
+                </div>
+            </div>
+        </div>
+
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
@@ -62,11 +70,36 @@
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="procees-to-visa-processLabel">Proceed to Visa</h5>
+                        <h5 class="modal-title" id="procees-to-visa-processLabel">Upload Document</h5>
                     </div>
                     <div class="modal-body">
-                        <p id="status-paragraph" class="text-danger">are You sure Want To Proceed, You Could Not Revert This Action</p>
-                        <input type="hidden" id="all_candidates" name="all_candidates" class="form-control">
+                        <p id="status-paragraph" class="text-danger">Please Upload The Correct document</p>
+
+
+                        <div class="form-group">
+                            <label for="">Labour Permit</label>
+                            <input type="file" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="">E Visa</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        
+
+                        <div class="form-group">
+                            <label for="">E Ticket</label>
+                            <input type="file" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="">Flight Departure Date</label>
+                            <input type="text" class="form-control min_today_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="">Candidate Arrival Date <span style="color:red">Befor Departure Date</span></label>
+                            <input type="text" class="form-control min_today_date">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary" type="submit">Proceed To Visa Process</button>
@@ -93,7 +126,6 @@
             ajax: {
                 url: "{{route('all-officer.candidate')}}",
                 data: function(d) {
-
                     d.company = $('#company').val();
                     d.demand = $('#demand').val();
                     d.medical = $('#medical').val();
@@ -104,6 +136,9 @@
                     d.visa_status = $('#visa_status').val();
                     d.interview_status = $('#interview_status').val();
                     d.evisa_status = $('#evisa_status').val();
+                    d.show_labour_permit_status = $('#show_labour_permit_status').val();
+                    d.show_eticket_status = $('#show_eticket_status').val();
+                    d.show_evisa_status = $('#show_evisa_status').val();
                 },
                 type: 'GET',
                 tryCount : 0,
@@ -131,7 +166,28 @@
                     "orderable": false, 
                     "searchable": false, 
                     "render": function(data, type, row) {
-                        return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                        let returnStrng = '';
+                        console.log(row);
+                        let testCheck = (
+                            (row.document_status == 'Completed' && (row.visa_status == 'Successed'))
+                                &&
+                            (
+                                row.evisa_status == '' || 
+                                row.evisa_status == null || 
+                                row.evisa_status == undefined || 
+                                row.labour_permit_status == '' || 
+                                row.labour_permit_status == null || 
+                                row.labour_permit_status == undefined || 
+                                row.evisa == '' || 
+                                row.evisa == null || 
+                                row.evisa == undefined 
+                            )
+                        );
+
+                        if(testCheck){
+                            returnStrng = `<input type="checkbox" name="selectedCandidates[]" value="${data}">`;
+                        }
+                        return returnStrng;
                     }
                 },
                 {
@@ -178,11 +234,18 @@
             showMonths:2,
         });
 
+
+
+        flatpickr(".min_today_date", {
+            showMonths:2,
+            minDate: 'today'
+        });
+
         function selectAll(source) {
             $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
         }
 
-        $(document).on('click', '#proceed-btn-to-visa-process', function(e){
+        $(document).on('click', '#upload-document', function(e){
             e.preventDefault();
             const selectedCandidates = [];
             const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selectedCandidates[]"]:checked');
@@ -220,6 +283,10 @@
             $('#visa_status').val();
             $('#interview_status').val();
             $('#evisa_status').val();
+
+            $('#show_labour_permit_status').val();
+            $('#show_eticket_status').val();
+            $('#show_evisa_status').val();
             $('#company-list-datatable').DataTable().ajax.reload();
         });
 

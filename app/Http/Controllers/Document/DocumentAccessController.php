@@ -2,24 +2,29 @@
 
 namespace App\Http\Controllers\Document;
 
-use App\Action\CandidateStatusNotificationAction;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Enum\UserTypes;
 use App\Models\Company;
 use App\Models\Language;
+use App\Models\Interview;
 use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
 use App\Models\EducationType;
 use App\Models\CompanyCandidate;
-use App\Http\Controllers\Controller;
-use App\Models\Candidat\MedicalCheckup;
-use App\Data\Datatables\DocumentAccessApidata;
-use App\Models\Candidate\DocumentProcess;
-use App\Models\Candidate\VisaProcess;
-use App\Models\Interview;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\Candidate\VisaProcess;
+use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\DocumentProcess;
 use Illuminate\Support\Facades\Validator;
+use App\Data\Datatables\DocumentAccessApidata;
+use App\Data\Datatables\AllOfficerAccessApidata;
+use App\Action\CandidateStatusNotificationAction;
+use App\Action\FinalDocumentAction;
+use App\Models\Candidate\ETicketProcess;
+use App\Models\Candidate\EVisaProcess;
+use App\Models\Candidate\LabourPermit;
 
 class DocumentAccessController extends Controller
 {
@@ -67,8 +72,26 @@ class DocumentAccessController extends Controller
             exit;
         }
         $companyCandidate = CompanyCandidate::findOrFail($companyCandidateId);
-
         $visaProcess = VisaProcess::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+
+        $labourPermit = LabourPermit::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+        $evisa = EVisaProcess::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+        $eticket = ETicketProcess::where([
             'user_id'=>$companyCandidate->user_id,
             'company_id'=>$companyCandidate->company_id,
             'demand_id'=>$companyCandidate->demand_id,
@@ -115,6 +138,9 @@ class DocumentAccessController extends Controller
             'medicalCheckup'=>$medicalCheckup,
             'interview'=>$interview,
             'visaProcess'=>$visaProcess,
+            'labourPermit'=>$labourPermit,
+            'evisa'=>$evisa,
+            'eticket'=>$eticket,
         ]);
     }
     public function updateDocumentStatus(Request $request, $companyCandidateId)
@@ -131,16 +157,53 @@ class DocumentAccessController extends Controller
             return back()->withInput();
         }
         $companyCandidate = CompanyCandidate::findOrFail($companyCandidateId);
+
         $documentProcess = DocumentProcess::where([
             'user_id'=>$companyCandidate->user_id,
             'company_id'=>$companyCandidate->company_id,
             'demand_id'=>$companyCandidate->demand_id,
-        ])->firstOrFail();
+        ])->first();
+        if(!$documentProcess){
+            $documentProcess = DocumentProcess::create([
+                'user_id'=>$companyCandidate->user_id,
+                'company_id'=>$companyCandidate->company_id,
+                'demand_id'=>$companyCandidate->demand_id,
+            ]);
+        }
         $documentProcess->status = $request->status ?? "Completed";
         $documentProcess->save();
         session()->flash('success', 'Successfully The Document Status has been completed');
         return redirect()->route('document-officer.candidate');
     }
+
+
+    public function uploadFinalDocument(Request $request)
+    {
+        if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
+            abort(401);
+            exit;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'all_candidates'=>'required',
+        ]);
+        if($validator->fails()){
+            return back()->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            (new FinalDocumentAction($request))->uplodaDocument();
+            DB::commit();
+            session()->flash('success', 'Successfully Document Has Been Uploaded');
+            return redirect()->route('document-officer.in-visa-candidate');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            info($th->getMessage());
+            session()->flash('error', $th->getMessage());
+        }
+    }
+
     public function proceedToVisa(Request $request)
     {
         if((int)auth()->user()->user_type !== UserTypes::DOCUMENT_OFFICER){
@@ -204,6 +267,43 @@ class DocumentAccessController extends Controller
         } catch (\Throwable $th) {
             session()->flash('error', $th->getMessage());
             return back();
+        }
+    }
+
+    public function inVisaCandidate(Request $request)
+    {
+        {
+            if((int)auth()->user()->user_type !== \App\Enum\UserTypes::NORMAL  && (int)auth()->user()->user_type !== \App\Enum\UserTypes::DOCUMENT_OFFICER){
+                abort(401);
+                exit;
+            }
+            $medicals = auth()->user()->medicals;
+            $companies = Company::orderBy('name')->get();
+            if($request->ajax()){
+                return (new AllOfficerAccessApidata($request))->getInCandidates();
+            }
+            $params = [
+                'show_filter'=>true,
+                'show_medical'=>false,
+                'show_company'=>true,
+                'show_demand'=>true,
+                'show_checkup_date'=>true,
+                'show_interview_status'=>false,
+                'show_selected_date'=>true,
+                'show_medical_status'=>false,
+                'show_document_status'=>false,
+                'show_visa_status'=>true,
+                'show_evisa_status'=>true,
+                'show_labour_permit_status'=>true,
+                'show_eticket_status'=>true,
+                'show_evisa_status'=>true,
+                'show_engaged_status'=>true,
+            ];
+            return view('backend.pages.document-officer.in-visa', [
+                'params'=>$params,
+                'companies'=>$companies,
+                'medicals'=>$medicals,
+            ]);
         }
     }
 }

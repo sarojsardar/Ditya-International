@@ -260,7 +260,7 @@
          {{-- this permission must be managed --}}
 
          {{-- @can(['receptionist-company-read']) --}}
-         <li class="menu-item {{ Request::is('user/document-officer/candidate*') ? 'active' : '' }}">
+         <li class="menu-item {{ Request::is('user/document-officer/candidate') ? 'active' : '' }}">
              <a href="{{route('document-officer.candidate')}}" class="menu-link ">
                 <i class="menu-icon ri-list-indefinite"></i>
                 <div data-i18n="All Candidate">All Candidate</div>
@@ -276,7 +276,7 @@
        {{-- this permission must be managed --}}
 
        {{-- @can(['receptionist-company-read']) --}}
-       <li class="menu-item {{ Request::is('user/company/candidate*') ? 'active' : '' }}">
+       <li class="menu-item {{ Request::is('user/company/candidate') ? 'active' : '' }}">
            <a href="{{route('company-officer.candidate')}}" class="menu-link ">
               <i class="menu-icon ri-list-indefinite"></i>
               <div data-i18n="In Visa Candidate">In Visa Candidate</div>
@@ -287,13 +287,13 @@
 
 
        {{-- After manag of permission we can remove this if condition --}}
-       @if((int)auth()->user()->user_type == \App\Enum\UserTypes::NORMAL  || (int)auth()->user()->user_type == \App\Enum\UserTypes::DOCUMENT_OFFICER)
+       @if((int)auth()->user()->user_type == \App\Enum\UserTypes::DOCUMENT_OFFICER)
        {{-- New developed for the medical officer --}}
        {{-- this permission must be managed --}}
 
        {{-- @can(['receptionist-company-read']) --}}
-       <li class="menu-item {{ Request::is('user/all-user/candidate*') ? 'active' : '' }}">
-           <a href="{{route('all-officer.candidate')}}" class="menu-link ">
+       <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+           <a href="{{route('document-officer.in-visa-candidate')}}" class="menu-link ">
               <i class="menu-icon ri-list-indefinite"></i>
               <div data-i18n="In Visa Candidate">In Visa Candidate</div>
            </a>

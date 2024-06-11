@@ -281,10 +281,10 @@ Route::middleware(['auth:web'])->prefix('/user/testimonials')->group(function(){
 // new developed for the all user candidate
 
 Route::group(['prefix'=>'all-officer', 'as'=>'all-officer.'], function(){
-    Route::group(['prefix'=>'candidate'], function(){
-        Route::get('/get-demand', [AllOfficerAccessController::class, 'getDemands'])->name('demands');
-        Route::get('/', [AllOfficerAccessController::class, 'getCandidates'])->name('candidate');
-    });
+    // Route::group(['prefix'=>'candidate'], function(){
+    //     Route::get('/get-demand', [AllOfficerAccessController::class, 'getDemands'])->name('demands');
+    //     Route::get('/', [AllOfficerAccessController::class, 'getCandidates'])->name('candidate');
+    // });
 });
 
 

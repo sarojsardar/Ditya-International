@@ -39,6 +39,8 @@ class AllOfficerAccessApidata
                  ->on('document_processes.demand_id', '=', 'company_candidates.demand_id');
         })
 
+        ->leftJoin('final_jobstatuses as final_job', 'final_job.user_id', '=', 'candidates.id')
+        
 
         ->leftJoin('interviews', function ($join) {
             $join->on('interviews.user_id', '=', 'candidates.id')
@@ -57,6 +59,18 @@ class AllOfficerAccessApidata
             $join->on('evisa_processes.user_id', '=', 'candidates.id')
                  ->on('evisa_processes.company_id', '=', 'company_candidates.company_id')
                  ->on('evisa_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('eticket_processes', function ($join) {
+            $join->on('eticket_processes.user_id', '=', 'candidates.id')
+                 ->on('eticket_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('eticket_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('labour_permits', function ($join) {
+            $join->on('labour_permits.user_id', '=', 'candidates.id')
+                 ->on('labour_permits.company_id', '=', 'company_candidates.company_id')
+                 ->on('labour_permits.demand_id', '=', 'company_candidates.demand_id');
         })
         ->where([
             // 'company_candidates.demand_status'=>'Interview',
@@ -140,12 +154,36 @@ class AllOfficerAccessApidata
             $query->where('visa_processes.status', $visa_status);
         })
         ->when($request->evisa_status, function($query, $evisa_status){
-            $query->where('evisa_processes.status', $evisa_status);
+            if($evisa_status == "Pending"){
+                $query->where('evisa_processes.status', null);
+            }else{
+                $query->where('evisa_processes.status', $evisa_status);
+            }
         })
         ->when($request->document_status, function($query, $document_status){
             $query->where('document_processes.status', $document_status);
         })
+        ->when($request->labour_permit_status, function($query, $labour_permit_status){
+            if($labour_permit_status == "Pending"){
+                $query->where('labour_permits.status', null);
+            }else{
+                $query->where('labour_permits.status', $labour_permit_status);
+            }
+        })
+        ->when($request->eticket_status, function($query, $eticket_status){
+            if($eticket_status == "Pending"){
+                $query->where('eticket_processes.status', null);
+            }else{
+                $query->where('eticket_processes.status', $eticket_status);
+            }
+        })
 
+
+        ->when($request->engaged_status, function($query, $engaged_status){
+            $query->where('final_job.status', (int)$engaged_status);
+        })
+
+        
         ->select([
             'company_candidates.*',
 
@@ -178,6 +216,10 @@ class AllOfficerAccessApidata
             'document_processes.status as document_status',
             'visa_processes.status as visa_status',
             'evisa_processes.status as evisa_status',
+
+            'eticket_processes.status as eticket_status',
+            'labour_permits.status as labour_permit_status',
+            'final_job.status as job_status'
         ]);
 
         return $companyCandidates;
@@ -224,6 +266,9 @@ class AllOfficerAccessApidata
                         <p class="p-0 m-0">Medical Status: '.$row->medical_status.'</p>
                         <p class="p-0 m-0">Document Status: '.$row->document_status.'</p>
                         <p class="p-0 m-0">Visa Status: '.$row->visa_status.'</p>
+                        <p class="p-0 m-0">E Visa Status: '.($row->evisa_status ?? "N/A").'</p>
+                        <p class="p-0 m-0">E Ticket Status: '.($row->eticket_status ?? "N/A").'</p>
+                        <p class="p-0 m-0">Labour Permit: '.($row->labour_permit_status ?? "N/A").'</p>
                         <p class="p-0 m-0">Final Job Status: '.$final_job_status.'</p>
                         
                     </div>

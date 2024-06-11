@@ -32,11 +32,11 @@
         <div class="card">
             <div class="card-body">
                 <div class="col-md-12">
-                    <button type="button" class="btn btn-primary btn-sm" id="proceed-btn-to-visa-process">Proceed to Visa Process</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="upload-document">Upload Document</button>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
@@ -45,13 +45,10 @@
                             <thead>
                             <tr>
                                 <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
-                                <th>Checkup Date</th>
-                                <th>Status</th>
-                                <th>Document Status</th>
                                 <th>Candidate</th>
+                                <th>Candidate Profile</th>
                                 <th>Company</th>
                                 <th>Company Logo</th>
-                                <th>Candidate Profile</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
@@ -65,22 +62,44 @@
         </div>
     </div>
 
-
-
     <div class="modal fade" id="procees-to-visa-process" tabindex="-1" role="dialog" aria-labelledby="procees-to-visa-processLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form action="{{route('document-officer.proceed-to-visa')}}" method="post" id="procees-to-visa-process">
+            <form action="{{route('document-officer.upload-candidate-document')}}" method="post" id="procees-to-visa-process" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="procees-to-visa-processLabel">Proceed to Visa</h5>
+                        <h5 class="modal-title" id="procees-to-visa-processLabel">Upload Document</h5>
                     </div>
                     <div class="modal-body">
-                        <p id="status-paragraph" class="text-danger">are You sure Want To Proceed, You Could Not Revert This Action</p>
+                        <p id="status-paragraph" class="text-danger">Please Upload The Correct document</p>
                         <input type="hidden" id="all_candidates" name="all_candidates" class="form-control">
+                        <div class="form-group">
+                            <label for="">Labour Permit</label>
+                            <input type="file" class="form-control" name="labour_permit">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="">E Visa</label>
+                            <input type="file" class="form-control" name="e_visa">
+                        </div>
+                        
+
+                        <div class="form-group">
+                            <label for="">E Ticket</label>
+                            <input type="file" class="form-control" name="eticket">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="">Flight Departure Date</label>
+                            <input type="text" class="form-control min_today_date" name="departure_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="">Candidate Arrival Date <span style="color:red">Befor Departure Date</span></label>
+                            <input type="text" class="form-control min_today_date" name="arrival_date">
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Proceed To Visa Process</button>
+                        <button class="btn btn-primary" type="submit">Submit</button>
                         <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>    
@@ -102,7 +121,7 @@
             "processing": true,
             "severside": true,
             ajax: {
-                url: "{{route('document-officer.candidate')}}",
+                url: "{{route('document-officer.in-visa-candidate')}}",
                 data: function(d) {
                     d.company = $('#company').val();
                     d.demand = $('#demand').val();
@@ -114,6 +133,9 @@
                     d.visa_status = $('#visa_status').val();
                     d.interview_status = $('#interview_status').val();
                     d.evisa_status = $('#evisa_status').val();
+                    d.labour_permit_status = $('#labour_permit_status').val();
+                    d.eticket_status = $('#eticket_status').val();
+                    d.engaged_status = $('#engaged_status').val();
                 },
                 type: 'GET',
                 tryCount : 0,
@@ -141,20 +163,43 @@
                     "orderable": false, 
                     "searchable": false, 
                     "render": function(data, type, row) {
-                        return (row.document_status == 'Completed' && (row.visa_status == null || row.visa_status == '' || row.visa_status == undefined)) ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '';
+                        let returnStrng = '';
+                        console.log(row);
+                        let testCheck = (
+                            (row.document_status == 'Completed' && (row.visa_status == 'Successed'))
+                                &&
+                            (
+                                (
+                                    row.evisa_status == '' ||
+                                    row.evisa_status == null ||
+                                    row.evisa_status == undefined
+                                )
+                                ||
+                                ( 
+                                    row.labour_permit_status == '' ||
+                                    row.labour_permit_status == null ||
+                                    row.labour_permit_status == undefined
+                                )
+                                ||
+                                (  
+                                    row.eticket_status == '' ||
+                                    row.eticket_status == null ||
+                                    row.eticket_status == undefined 
+                                )
+                            )
+                        );
+
+                        if(testCheck){
+                            returnStrng = `<input type="checkbox" name="selectedCandidates[]" value="${data}">`;
+                        }
+                        return returnStrng;
                     }
                 },
                 {
-                    'data':'checkup_date'
-                },
-                {
-                    'data':'medical_status'
-                },
-                {
-                    'data':'document_status'
-                },
-                {
                     'data' : 'candidate_info'
+                },
+                {
+                    'data' : 'profile'
                 },
                 {
                     'data':'company_info'
@@ -163,24 +208,11 @@
                     'data' : 'logo'
                 },
                 {
-                    'data' : 'profile'
-                },  
-                {
                     'data' : 'action'
                 },
             ]
         });
 
-
-        $(document).on('click', '#filter-btn', function(e){
-            e.preventDefault();
-            table.draw();
-            let medical = $('#medical').val();
-            let company = $('#company').val();
-            let checkup_date = $('#checkup_date').val();
-            let status = $('#status').val();
-            $('#company-list-datatable').DataTable().ajax.reload();
-        });
 
         $(document).on('click', '.btn-action-status', function(e){
             e.preventDefault();
@@ -207,11 +239,18 @@
             showMonths:2,
         });
 
+
+
+        flatpickr(".min_today_date", {
+            showMonths:2,
+            minDate: 'today'
+        });
+
         function selectAll(source) {
             $(source).closest('table').find('input[type="checkbox"][name="selectedCandidates[]"]').prop('checked', source.checked);
         }
 
-        $(document).on('click', '#proceed-btn-to-visa-process', function(e){
+        $(document).on('click', '#upload-document', function(e){
             e.preventDefault();
             const selectedCandidates = [];
             const checkboxes = document.querySelectorAll('input[type="checkbox"][name="selectedCandidates[]"]:checked');
@@ -227,6 +266,16 @@
         });
 
 
+
+
+       
+        // for the filter button
+        $(document).on('click', '#filter-btn', function(e){
+            e.preventDefault();
+            $('#company-list-datatable').DataTable().ajax.reload();
+        });
+
+
         $(document).on('click', '#clear_filter', function(e){
             e.preventDefault();
             $('#company').val();
@@ -239,32 +288,10 @@
             $('#visa_status').val();
             $('#interview_status').val();
             $('#evisa_status').val();
-            $('#company-list-datatable').DataTable().ajax.reload();
-        });
+            $('#labour_permit_status').val();
+            $('#eticket_status').val();
+            $('#engaged_status').val();
 
-
-
-
-
-         // for the filter button
-         $(document).on('click', '#filter-btn', function(e){
-            e.preventDefault();
-            $('#company-list-datatable').DataTable().ajax.reload();
-        });
-
-
-        $(document).on('click', '#clear_filter', function(e){
-            e.preventDefault();
-            d.company = $('#company').val();
-            $('#demand').val();
-            $('#medical').val();
-            $('#checkup_date').val();
-            $('#selected_date').val();
-            $('#medical_status').val();
-            $('#document_status').val();
-            $('#visa_status').val();
-            $('#interview_status').val();
-            $('#evisa_status').val();
             $('#company-list-datatable').DataTable().ajax.reload();
         });
 
@@ -294,5 +321,9 @@
                 
             })
         }
+
+        
+
+        
     </script>
 @endpush
