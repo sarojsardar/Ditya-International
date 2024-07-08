@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\GenderController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Candidate\DocumentProcessController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SplashController;
 
 /*
@@ -114,11 +116,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/checkAllStep', [CheckStepController::class, 'checkAllDetailsFilled']);
 
+
+
+
+
     // Inverview Controller
     Route::get('/selectedByCompany', [InterviewController::class, 'selectedByCompany']);
 
     Route::get('/interviewInvites', [InterviewController::class, 'interviewInvites']);
 
     Route::post('/interviewStatus/{id}', [InterviewController::class, 'updateStatus'])->name('changeStatus');
-
+    
+    // for the candidate notification
+    Route::group(['middleware'=>'auth:sanctum'], function(){
+        Route::group(['prefix'=>'notifications'], function(){
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/{notification_id}', [NotificationController::class, 'show']);
+        });
+        Route::group(['prefix'=>'document-process'], function(){
+            Route::get('/', [DocumentProcessController::class, 'index']);
+            Route::get('/{process_id}', [DocumentProcessController::class, 'show']);
+            Route::post('/{process_id}', [DocumentProcessController::class, 'uploadDocument']);
+        });
+    });
 });

@@ -12,7 +12,8 @@ class DashboardController extends Controller
 
     public function index()
     {
-
+        
+        // dd(auth()->user(), auth()->user()->companyInfo);
         return view('backend.pages.dashboards.ceo-dashboard');
     }
 

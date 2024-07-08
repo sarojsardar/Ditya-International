@@ -17,8 +17,10 @@ use App\Enum\UserInterviewStatus;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Data\Candidate\CandidateData;
+use App\Models\Candidat\MedicalCheckup;
 use Yajra\DataTables\Facades\DataTables;
 use App\Notifications\DemandNotification;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -309,10 +311,10 @@ class CandidateController extends Controller
                 ->whereHas('educations', function ($query) use ($demand) {
                     $query->where('edu_level', '>=', $demand->edu_level);
                 })
-                // ->whereHas('interviews', function (Builder $query) use ($demand) {
-                //     $query->whereColumn('interviews.user_id', 'users.id')
-                //           ->where('interviews.demand_id', $demand->id);
-                // })
+                ->whereDoesntHave('interviews', function (Builder $query) use ($demand) {
+                    $query->whereColumn('interviews.user_id', 'users.id')
+                          ->where('interviews.demand_id', $demand->id);
+                })
                 ->get();
         } else {
             // Handle cases where the auth user or their company info is not available
@@ -465,6 +467,10 @@ class CandidateController extends Controller
                 ->whereHas('educations', function ($query) use ($demand) {
                     $query->where('edu_level', '>=', $demand->edu_level);
                 })
+                ->whereHas('interviews', function (Builder $query) use ($demand) {
+                    $query->whereColumn('interviews.user_id', 'users.id')
+                          ->where('interviews.demand_id', $demand->id);
+                })
                 ->get();
         } else {
             // Handle cases where the auth user or their company info is not available
@@ -474,6 +480,7 @@ class CandidateController extends Controller
 
         $userId = $authUserId;
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
+        
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
             $userLanguageIds = $user->manyLanguages->pluck('id')->all();
 
@@ -494,7 +501,7 @@ class CandidateController extends Controller
         });
 
         session(['currentDemand' => $demand]);
-
+        
         if($request->ajax()){
             return DataTables::of($filteredUsers)
                 ->addIndexColumn()
@@ -819,7 +826,6 @@ class CandidateController extends Controller
             abort(404, 'Demand not found.');
         }
         if ($request->ajax()) {
-
             $demandId = $companyDemand->id;
             $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
                 ->whereHas('candidateCompany', function ($query) {
@@ -881,9 +887,28 @@ class CandidateController extends Controller
                 ->addColumn('total_work_experience', function($row){
                     return $row->total_work_experience;
                 })
-                ->addColumn('interview_status', function($row) {
+                ->addColumn('interview_status', function($row) use($companyDemand) {
                     // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
-                    return $row->candidateCompany->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                    // wrong code
+                    $companyCandidate = CompanyCandidate::where([
+                        'user_id' => $row->id,
+                        'demand_id' => $companyDemand->id,
+                    ])->latest()->first();
+                    return $companyCandidate->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                })
+
+                ->addColumn('medical_checkup', function($row) use($companyDemand){
+                    $medicalCheckup = MedicalCheckup::where([
+                        'user_id'=>$row->id,
+                        'demand_id'=>$companyDemand->id,
+                        'is_tested'=>false,
+                    ])
+                    ->whereDate('checkup_date', '>=', Carbon::now())
+                    ->latest()->first();
+                    if($medicalCheckup){
+                        return 1;
+                    }
+                    return 0;
                 })
                 // Add other columns...
                 ->addColumn('action', function ($row) {

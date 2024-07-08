@@ -45,8 +45,6 @@ class MedicalAccessApidata
                 $query->where('status', $status);
             }
         });
-
-        
         
         return DataTables::of($medicalCheckUps)
             ->addIndexColumn()

@@ -67,7 +67,6 @@
                                                     <thead>
                                                     <tr>
                                                         <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
-                                                        <th>S.N</th>
                                                         <th>Status</th>
                                                         <th>Full Name</th>
                                                         <th>Gender</th>
@@ -97,8 +96,6 @@
         </div>
     </div>
 
-
-  
     <div class="modal fade" id="move_to_medical" tabindex="-1" role="dialog" aria-labelledby="move_to_medicalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
 
@@ -178,11 +175,14 @@
                     "type": "GET",
                 },
                 "columns": [
-                    { "data": "id", "orderable": false, "searchable": false, "render": data => `<input type="checkbox" name="selectedCandidates[]" value="${data}">` },
-                    {
-                        "data": "DT_RowIndex",
-                        searchable: false, 
-                        orderable: false
+                    { 
+                        "data": "id", 
+                        "orderable": false, 
+                        "searchable": false, 
+                        "render": function(data, type, row) {
+                            console.log(row);
+                            return (row.medical_checkup == 0 ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '');
+                        }
                     },
                     {
                         "data": "interview_status"

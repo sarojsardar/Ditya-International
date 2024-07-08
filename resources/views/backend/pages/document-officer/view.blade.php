@@ -76,7 +76,9 @@
                         <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
                             <img src="{{ url('/storage/uploads/passport-photos/' . $userDetails?->uploadPhoto?->passport_photo) }}"
                                 alt="user image" height="80" width="100"
-                                class="d-block ms-0 ms-sm-4 rounded  img-fluid" />
+                                @if($companyCandidate->demand_status !== 'Completed') class="d-block ms-0 ms-sm-4 rounded  img-fluid" />
+                                <a href="#" class="d-block uplod-new-document" data-name="passport_photo" data-label="Passport Photo" data-title="Upload Photo">New Upload</a>
+                                @endif
                         </div>
                         <div class="flex-grow-1 mt-3 mt-sm-5">
                             <div
@@ -98,6 +100,13 @@
                                             <span>{{ (bool) $interview?->is_selected ? 'Selected' : 'Not Selected Or Not Scheduled Or Not Taken' }}</span>
                                         </li>
 
+
+                                        <li class="list-inline-item">
+                                            <i class="mdi mdi-bookmark-check mdi-24px"></i>
+                                            <span class="fw-medium mx-2">Job Status :</span>
+                                            <span>{{  $companyCandidate->demand_status }}</span>
+                                        </li>
+
                                         <li class="list-inline-item">
                                             <i class="mdi mdi-map-marker-outline me-1 mdi-20px"></i><span
                                                 class="fw-medium">{{ $userDetails?->userDetail->permanent_address }}</span>
@@ -111,7 +120,11 @@
                                 </div>
 
                                 {{-- @if (!@$visaProcess) --}}
+
+                                
                                 <div class="button-group" style="flex-shrink: 0;"> <!-- Ensure the buttons don't shrink -->
+
+                                    {{-- @if((!$documentProcess) || (($documentProcess) ? ($documentProcess->status !== 'Completed') : true)) --}}
                                     <a href="#" id="document-status" title='Info' class="me-2">
                                         <!-- Add me-2 for spacing -->
                                         <button class='btn btn-sm btn-primary'><i class='fas fa-info'></i>Document
@@ -123,7 +136,18 @@
                                         <button class='btn btn-sm btn-info'><i class='fas fa-info'></i>Notify
                                             Candidate</button>
                                     </a>
+                                    {{-- @endif --}}
+
+
+                                    @if($companyCandidate->demand_status !== "Cancelled" && $companyCandidate->demand_status  !== "Completed")
+                                    <a href="#" id="cancell-all-process" title='Info' class="me-2">
+                                        <button class='btn btn-sm btn-primary'><i class='fas fa-info'></i>Cancell All Process</button>
+                                    </a>
+                                    @endif
+
+
                                 </div>
+                                
                                 {{-- @endif --}}
 
                             </div>
@@ -313,7 +337,9 @@
                                                     class="img-fluid rounded-circle lightbox-trigger"
                                                     style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
                                             </div>
-                                            <h6 class="mb-0">Passport Size Photo</h6>
+                                            @if($companyCandidate->demand_status !== 'Completed') <h6 class="mb-0">Passport Size Photo</h6>
+                                            <a href="#" class="d-block uplod-new-document" data-name="passport_size" data-label="Passport Size Photo" data-title="Upload  Size Photo">New Upload</a>
+                                            @endif
                                         </div>
                                     </li>
                                     <li class="mb-3">
@@ -324,7 +350,9 @@
                                                     class="img-fluid rounded-circle lightbox-trigger"
                                                     style="width:100px; height:100px; object-fit: cover; cursor:pointer;">
                                             </div>
-                                            <h6 class="mb-0">Full Size Photo</h6>
+                                            @if($companyCandidate->demand_status !== 'Completed') <h6 class="mb-0">Full Size Photo</h6>
+                                            <a href="#" class="d-block uplod-new-document" data-name="full_size" data-label="Ful size Photo" data-title="Upload Full Size Photo">New Upload</a>
+                                            @endif
                                         </div>
                                     </li>
                                 </ul>
@@ -352,7 +380,9 @@
                                                     "{{ asset('storage/uploads/resume-files/' . $userDetails?->resumeDetail?->resume_file) }}";
                                             });
                                         </script>
-
+                                        @if($companyCandidate->demand_status !== 'Completed')
+                                            <a href="#" class="d-block uplod-new-document" data-name="resume" data-label="Resume" data-title="Upload Resume">New Upload</a>
+                                        @endif
                                     </li>
                                 </ul>
                             </div>
@@ -379,7 +409,6 @@
                                     <tr>
                                         <td>
                                             <iframe id="pdfViewer1" width="100%" height="220px"></iframe>
-
                                             <script>
                                                 document.addEventListener('DOMContentLoaded', (event) => {
                                                     // Set the iframe src attribute dynamically
@@ -387,6 +416,11 @@
                                                         "{{ asset('storage/uploads/edu-doc/' . $userDetails?->educationalQualification?->edu_doc) }}";
                                                 });
                                             </script>
+
+                                                @if($companyCandidate->demand_status !== 'Completed')
+                                                    <a href="#" class="d-block uplod-new-document" data-name="educational_doc" data-label="Educational Document" data-title="Upload Educational Document">New Upload</a> 
+                                                @endif
+                                          
                                         </td>
                                         <td style="vertical-align: top;">
                                             {{ ucfirst($userDetails?->educationalQualification?->level) }}</td>
@@ -505,13 +539,35 @@
                             <label for="">Status:</label>
                             <select name="status" id="status" class="form-control">
                                 <option value="Completed">Completed</option>
-                                <option value="In Progress">In Progress</option>
                             </select>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary">Change Status</button>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+
+    <div class="modal fade" id="cancellAllProcess" tabindex="-1" role="dialog" aria-labelledby="cancellAllProcessLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form action="{{ route('document-officer.candidate-cancel', $companyCandidate->id) }}" method="post" id="cancellation-form">
+                @csrf
+                @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="changeDocumentStatusLabel">Cancellation</h5>
+                    </div>
+                    <div class="modal-body">
+                    <p class="text-danger">Are You sure......? This Action Could Not Be Revert</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Change Status</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </form>
@@ -577,7 +633,35 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary" type="submit">Notify User</button>
-                        <button class="btn btn-danger" type="button" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" type="button" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    {{-- document upload modal --}}
+    <div class="modal fade" id="uplod-document" tabindex="-1" role="dialog"
+        aria-labelledby="uplod-documentLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form action="{{ route('document-officer.document-upload', $companyCandidate->id) }}" method="post"
+                id="document-upload-form" enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uplod-documentLabel">Uplod New <span id="document-text"></span></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for=""><span id="document-label"></span></label>
+                        </div>
+                        <input type="file" name="" class="form-control" id="document-input">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary">Upload</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </form>
@@ -592,8 +676,27 @@
             $('#changeDocumentStatus').modal('show');
         });
 
+
+        $(document).on('click', '#cancell-all-process', function(e) {
+            e.preventDefault();
+            $('#cancellAllProcess').modal('show');
+        });
+
         $(document).on('click', '#notify-user', function() {
             $('#notify-userModal').modal('show');
+        });
+
+
+        $(document).on('click', '.uplod-new-document', function(e){
+            e.preventDefault();
+            let label = $(this).data('label');
+            let name = $(this).data('name');
+            let title = $(this).data('title');
+            $('#document-label').text(label);
+            $('#document-text').text(label);
+            $('#document-input').attr('name', name);
+            $('#document-text').text('title');
+            $('#uplod-document').modal('show');
         });
 
 

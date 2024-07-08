@@ -102,8 +102,9 @@
             "processing": true,
             "severside": true,
             ajax: {
-                url: "{{route('document-officer.candidate')}}",
+                url: "{{route('document-officer.candidate-data')}}",
                 data: function(d) {
+                    d.type = "{{ @$type }}";
                     d.company = $('#company').val();
                     d.demand = $('#demand').val();
                     d.medical = $('#medical').val();

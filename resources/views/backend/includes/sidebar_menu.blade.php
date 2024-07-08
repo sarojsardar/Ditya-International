@@ -233,7 +233,7 @@
         <li class="menu-item {{ Request::is('user/medical-process*') ? 'active' : '' }}">
             <a href="{{route('receptionist.medical.company.index')}}" class="menu-link ">
                 <i class="menu-icon ri-heart-pulse-line"></i>
-                <div data-i18n="Medical Process">Medical Process </div>
+                <div data-i18n="Medical Process">Medical Process</div>
             </a>
         </li>
         @endcan
@@ -267,6 +267,86 @@
              </a>
          </li>
          {{-- @endcan --}}
+
+
+
+            {{-- New developed for the medical officer --}}
+            {{-- this permission must be managed --}}
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.visa-calling-candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Calling Visa">Calling Visa</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+
+            {{-- New developed for the medical officer --}}
+            {{-- this permission must be managed --}}
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.visa-received-candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Visa Received">Visa Received</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.evisa-calling-candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Calling E Visa">Calling E Visa</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.evisa-received-candidate')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="E Visa Received">E Visa Received</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.candidate-final-approval')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Final Approval">Final Approval</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+
+
+            {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.candidate-ticketing')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Tickting">Tickting</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
+            
+             {{-- @can(['receptionist-company-read']) --}}
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.candidate-engaged')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Engaged">Engaged</div>
+                </a>
+            </li>
+
+
+            <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
+                <a href="{{route('document-officer.candidate-cancelled')}}" class="menu-link ">
+                <i class="menu-icon ri-list-indefinite"></i>
+                <div data-i18n="Cancelled">Cancelled</div>
+                </a>
+            </li>
+            {{-- @endcan --}}
          @endif
 
 
@@ -279,31 +359,20 @@
        <li class="menu-item {{ Request::is('user/company/candidate') ? 'active' : '' }}">
            <a href="{{route('company-officer.candidate')}}" class="menu-link ">
               <i class="menu-icon ri-list-indefinite"></i>
-              <div data-i18n="In Visa Candidate">In Visa Candidate</div>
+              <div data-i18n="Visa Process">Visa Process</div>
            </a>
        </li>
        {{-- @endcan --}}
+
+
+       <li class="menu-item {{ Request::is('user/company/candidate') ? 'active' : '' }}">
+            <a href="{{route('company-officer.evisa-candidate')}}" class="menu-link ">
+            <i class="menu-icon ri-list-indefinite"></i>
+            <div data-i18n="E Visa Process">E Visa Process</div>
+            </a>
+        </li>
        @endif
 
-
-       {{-- After manag of permission we can remove this if condition --}}
-       @if((int)auth()->user()->user_type == \App\Enum\UserTypes::DOCUMENT_OFFICER)
-       {{-- New developed for the medical officer --}}
-       {{-- this permission must be managed --}}
-
-       {{-- @can(['receptionist-company-read']) --}}
-       <li class="menu-item {{ Request::is('user/document-officer/candidate/in-visa') ? 'active' : '' }}">
-           <a href="{{route('document-officer.in-visa-candidate')}}" class="menu-link ">
-              <i class="menu-icon ri-list-indefinite"></i>
-              <div data-i18n="In Visa Candidate">In Visa Candidate</div>
-           </a>
-       </li>
-       {{-- @endcan --}}
-       @endif
-
-
-
-        
         @can(['webContent-read', 'webContent-create'])
 
             <li class="menu-item">

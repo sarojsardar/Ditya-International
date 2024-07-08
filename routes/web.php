@@ -55,9 +55,17 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::put('/company-list/{id}/update', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/manager/company-list', [CompanyController::class, 'index'])->name('manager.company.index')->middleware(['can:manager-company-read']);
 
-    Route::get('/receptionist/company-list', [CompanyController::class, 'receptionist'])->name('receptionist.company.index')->middleware(['can:receptionist-company-read']);
 
-    Route::get('/receptionist/medical-process', [CompanyController::class, 'medicalProcess'])->name('receptionist.medical.company.index')->middleware(['can:receptionist-company-read']);
+    Route::group(['prefix'=>'receptionist'], function(){
+        Route::get('/company-list', [CompanyController::class, 'receptionist'])->name('receptionist.company.index')->middleware(['can:receptionist-company-read']);
+        Route::get('/company-list/{companyId}', [CompanyDemandController::class, 'receptionistIndex'])->name('receptionist-demand.index');
+        Route::get('/medical-process', [CompanyDemandController::class, 'medicalProcess'])->name('receptionist.medical.company.index')->middleware(['can:receptionist-company-read']);
+        Route::get('/medical-process/{companyUserId?}', [CompanyDemandController::class, 'medicalProcessCandidate'])->name('receptionist.medical-process.company.index')->middleware(['can:receptionist-company-read']);;
+        Route::get('/medical-process/data/{demand_code?}', [CompanyDemandController::class, 'medicalProcessCandidateData'])->name('receptionist.medical-process.company.data')->middleware(['can:receptionist-company-read']);;
+        Route::get('/candidate/selected/list/{demand_code}', [CandidateController::class, 'receptionistSelectedCandidates'])->name('receptionist.selected.candidates');
+        // move to medical
+        Route::post('/move-to-medical', [CompanyDemandController::class, 'moveToMedical'])->name('move-to-medical');
+    });
     
 
     //company demand entry
@@ -94,26 +102,39 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::post('/demands/{demandId}/notify', [CandidateController::class, 'sendDemandNotifications'])->name('demands.notify');
 
     //All Demands
-    Route::get('/match-candidates', [CompanyDemandController::class, 'allIndex'])->name('all-demand.index')->middleware(['can:all-demand-read']);
 
-    Route::get('/approved-candidates', [CompanyDemandController::class, 'approvedIndex'])->name('approved-demand.index')->middleware(['can:all-demand-read']);
+    Route::group(['prefix'=>'company'], function(){
+        Route::get('/match-candidates', [CompanyDemandController::class, 'allIndex'])->name('all-demand.index')->middleware(['can:all-demand-read']);
 
-    Route::get('/interview-candidates', [CompanyDemandController::class, 'interviewIndex'])->name('interview-demand.index')->middleware(['can:all-demand-read']);
+        Route::get('/approved-candidates', [CompanyDemandController::class, 'approvedIndex'])->name('approved-demand.index')->middleware(['can:all-demand-read']);
+    
+        Route::get('/interview-candidates', [CompanyDemandController::class, 'interviewIndex'])->name('interview-demand.index')->middleware(['can:all-demand-read']);
+    
+        Route::get('/manager/approved-list/{companyId}', [CompanyDemandController::class, 'managerIndex'])->name('manager-demand.index');
+    
+        Route::get('/manager/interview-list/{companyId}', [CompanyDemandController::class, 'managerInterviewIndex'])->name('manager-interview-demand.index');
 
-    Route::get('/manager/approved-list/{companyId}', [CompanyDemandController::class, 'managerIndex'])->name('manager-demand.index');
+    });
+    
 
-    Route::get('/manager/interview-list/{companyId}', [CompanyDemandController::class, 'managerInterviewIndex'])->name('manager-interview-demand.index');
 
-    Route::get('/receptionist/company-list/{companyId}', [CompanyDemandController::class, 'receptionistIndex'])->name('receptionist-demand.index');
 
-    // move to medical
-    Route::post('/receptionist/move-to-medical', [CompanyDemandController::class, 'moveToMedical'])->name('move-to-medical');
 
+
+
+    // new edited for the finalized
+
+    Route::group(['prefix'=>'company'], function(){
+        Route::get('/candidate/approved/list/{demand_code}', [CandidateController::class, 'approvedDemandCandidates'])->name('approved.candidate.demandCandidates')->middleware(['can:candidate-read']);
+        Route::get('/candidate/interview/list/{demand_code}', [CandidateController::class, 'interviewDemandCandidates'])->name('company.interview.candidate.demandCandidates')->middleware(['can:candidate-read']);
+        Route::get('/details/{id}/{demandId}', [CandidateController::class, 'companyUserDetail'])->name('company.user.detail')->middleware(['can:candidate-read']);
+    });
 
 
     Route::get('/candidate/demand/list', [CandidateController::class, 'index'])->name('candidate.index')->middleware(['can:candidate-read']);
-    Route::get('/candidate/list/{demand_code}', [CandidateController::class, 'demandCandidates'])->name('candidate.demandCandidates')->middleware(['can:candidate-read']);
     Route::get('/candidate/approved/list/{demand_code}', [CandidateController::class, 'approvedDemandCandidates'])->name('approved.candidate.demandCandidates')->middleware(['can:candidate-read']);
+    Route::get('/candidate/list/{demand_code}', [CandidateController::class, 'demandCandidates'])->name('candidate.demandCandidates')->middleware(['can:candidate-read']);
+
 
     Route::get('/candidate/interview/list/{demand_code}', [CandidateController::class, 'interviewDemandCandidates'])->name('interview.candidate.demandCandidates')->middleware(['can:candidate-read']);
     Route::get('/candidate/create', [CandidateController::class, 'create'])->name('candidate.create')->middleware(['can:candidate-create']);
@@ -135,7 +156,6 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::get('/manager/candidate/interview/list/{demand_code}', [CandidateController::class, 'managerInterviewDemandCandidates'])->name('manager.interview.candidate.demandCandidates');
 
 
-    Route::get('/receptionist/candidate/selected/list/{demand_code}', [CandidateController::class, 'receptionistSelectedCandidates'])->name('receptionist.selected.candidates');
     //Category
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index')->middleware(['can:webContent-read']);
     Route::get('/categories/add', [CategoryController::class, 'create'])->name('categories.create')->middleware(['can:webContent-create']);
@@ -281,10 +301,10 @@ Route::middleware(['auth:web'])->prefix('/user/testimonials')->group(function(){
 // new developed for the all user candidate
 
 Route::group(['prefix'=>'all-officer', 'as'=>'all-officer.'], function(){
-    // Route::group(['prefix'=>'candidate'], function(){
-    //     Route::get('/get-demand', [AllOfficerAccessController::class, 'getDemands'])->name('demands');
-    //     Route::get('/', [AllOfficerAccessController::class, 'getCandidates'])->name('candidate');
-    // });
+    Route::group(['prefix'=>'candidate'], function(){
+        Route::get('/get-demand', [AllOfficerAccessController::class, 'getDemands'])->name('demands');
+        Route::get('/', [AllOfficerAccessController::class, 'getCandidates'])->name('candidate');
+    });
 });
 
 

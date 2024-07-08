@@ -1,6 +1,7 @@
 <?php
 namespace App\Data\Datatables;
 
+use App\Enum\CandiateAccessEnum;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\CompanyCandidate;
@@ -18,7 +19,7 @@ class CompanyAccessApidata
         $this->request = $request;
     }
 
-    public function getInCandidates()
+    public function getInCandidates($type=CandiateAccessEnum::NEW_FOR_VISA)
     {
         $company = request()->company;
         $demand = request()->demand;
@@ -55,6 +56,26 @@ class CompanyAccessApidata
                  ->on('visa_processes.company_id', '=', 'company_candidates.company_id')
                  ->on('visa_processes.demand_id', '=', 'company_candidates.demand_id');
         })
+
+        ->leftJoin('evisa_processes', function ($join) {
+            $join->on('evisa_processes.user_id', '=', 'candidates.id')
+                 ->on('evisa_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('evisa_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('eticket_processes', function ($join) {
+            $join->on('eticket_processes.user_id', '=', 'candidates.id')
+                 ->on('eticket_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('eticket_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('labour_permits', function ($join) {
+            $join->on('labour_permits.user_id', '=', 'candidates.id')
+                 ->on('labour_permits.company_id', '=', 'company_candidates.company_id')
+                 ->on('labour_permits.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+
         ->select([
                 'company_candidates.*',
 
@@ -86,8 +107,11 @@ class CompanyAccessApidata
 
                 'document_processes.status as document_status',
                 'visa_processes.status as visa_status',
+                'evisa_processes.status as evisa_status',
 
-                'company_demands.status as demand_status'
+                'eticket_processes.status as eticket_status',
+                'labour_permits.status as labour_permit_status',
+                // 'final_job.status as job_status'
             ])
         
             
@@ -97,8 +121,44 @@ class CompanyAccessApidata
         ->where([
             'company_candidates.demand_status'=>'Interview',
             'company_candidates.interview_status'=>'Selected',
-        ])
-        ->when($demand, function($query, $demand){
+        ]);
+
+        switch ($type) {
+            case CandiateAccessEnum::NEW_FOR_VISA:
+                $companyCandidates->where([
+                    'company_candidates.demand_status'=>'Interview',
+                    'company_candidates.interview_status'=>'Selected',
+                ])->where('visa_processes.id', '!=', null);
+            break;
+
+            case CandiateAccessEnum::EVISA_CALLING:
+                $companyCandidates->where('evisa_processes.id', '!=', null);
+            break;
+
+            case CandiateAccessEnum::IN_VISA:
+                    $companyCandidates->where([
+                        'company_candidates.demand_status'=>'Interview',
+                        'company_candidates.interview_status'=>'Selected',
+                    ])->where('visa_processes.status', '!=', null);
+                break;
+            case CandiateAccessEnum::IN_DOCUMENT:
+                $companyCandidates->where([
+                    'company_candidates.demand_status'=>'Interview',
+                    'company_candidates.interview_status'=>'Selected',
+                ]);
+                break;
+                
+            case CandiateAccessEnum::IN_MEDICAL:
+                $companyCandidates->where('medical_checkups.id', '!=', null);
+                break;
+                            
+            default:
+                # code...
+                break;
+        }
+
+
+        $companyCandidates->when($demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
         })
 

@@ -15,7 +15,9 @@ use App\Models\CompanyCandidate;
 use App\Http\Controllers\Controller;
 use App\Models\Candidat\MedicalCheckup;
 use App\Data\Datatables\CompanyAccessApidata;
+use App\Enum\CandiateAccessEnum;
 use App\Models\Candidate\DocumentProcess;
+use App\Models\Candidate\EVisaProcess;
 use App\Models\Candidate\VisaProcess;
 use App\Models\Interview;
 use Carbon\Carbon;
@@ -24,6 +26,18 @@ use Illuminate\Support\Facades\Validator;
 
 class CompanyAccessController extends Controller
 {
+    public function getCandidates(Request $request)
+    {
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
+            abort(401);
+            exit;
+        }
+        if($request->ajax()){
+            return (new CompanyAccessApidata($request))->getInCandidates($request->type);
+        }
+    }
+
+
     public function getInCandidates(Request $request)
     {
         if((int)auth()->user()->user_type !== UserTypes::COMPANY){
@@ -182,6 +196,96 @@ class CompanyAccessController extends Controller
             DB::rollBack();
             session()->flash('error', $th->getMessage());
             return redirect()->route('company-officer.candidate');
+        }
+    }
+
+
+
+    public function getEvisaCandidates(Request $request)
+    {
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
+            abort(401);
+        }
+        $medicals = auth()->user()->medicals;
+        $companies = Company::orderBy('name')->get();
+        if($request->ajax()){
+            return (new CompanyAccessApidata($request))->getInCandidates();
+        }
+
+        $company = Company::where('user_id', auth()->user()->id)->latest()->first();
+        $demands = CompanyDemand::where('company_id', $company->user_id)->orderBy('demand_code')->get();
+        return view('backend.pages.company-officer.visa-process', [
+            'companies'=>$companies, 
+            'demands'=>$demands,
+            'type'=>CandiateAccessEnum::EVISA_CALLING,
+        ]);
+    }
+
+
+    public function proceedToEVisa(Request $request)
+    {
+        if((int)auth()->user()->user_type !== UserTypes::COMPANY){
+            abort(401);
+        }
+        $rules = [
+            'all_candidates'=>'required',
+            'status'=>'required|in:Successed,Rejected',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            session()->flash('error', 'Sorry Unprocessable Data');
+            return back();
+        }
+
+        if($request->status == 'Successed'){
+            $rules['visa'] = 'required|mimes:pdf';
+        }
+        if($request->status == 'Rejected'){
+            $rules['reason'] = 'required';
+        }
+        $validator = Validator::make($request->all(), $rules);
+        if($validator->fails()){
+            session()->flash('error', 'Sorry Unprocessable Data');
+            return back();
+        }
+        DB::beginTransaction();
+        try {
+            $companyCandidates = CompanyCandidate::whereIn('id', (json_decode($request->all_candidates, true) ?? []))->latest()->get();
+            $processIds = [];
+            
+            $visa = null;
+            if($request->has('visa')){
+                $visa = (new FileSupportAction)->uploadFile($request->visa, 'visa');
+            }
+            foreach ($companyCandidates as $key => $companyCandidate) {
+                $demand = CompanyDemand::find($companyCandidate->demand_id);
+                $visaProcess = EVisaProcess::where([
+                    'user_id'=>$companyCandidate->user_id,
+                    'company_id'=>$companyCandidate->company_id,
+                    'demand_id'=>$companyCandidate->demand_id,
+                    'demand_code'=>$demand->demand_code,
+                ])->first();
+                if($visaProcess){
+                    $visaProcess->update([
+                        'status'=>$request->status,
+                        'reason'=>$request->reason ?? null,
+                        'visa'=>$visa,
+                    ]);
+                    $processIds[] = $visaProcess->refresh()->id;
+                }
+            }
+            try {
+                (new CandidateStatusNotificationAction)->updateEVisaStatus($processIds, $request->status);
+            } catch (\Throwable $th) {
+                info("Error While Push Notification ".$th->getMessage());
+            }
+            DB::commit();
+            session()->flash('success', 'Successfuly Proceed To Visa Process');
+            return back();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            session()->flash('error', $th->getMessage());
+            return back();
         }
     }
 }

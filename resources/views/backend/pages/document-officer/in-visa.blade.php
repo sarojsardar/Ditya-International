@@ -113,7 +113,6 @@
     <script src="{{asset('flatpickr/dist/flatpickr.min.js')}}"></script>
     <script src="{{asset('axios/dist/axios.js')}}"></script>
     <script>
-
         let table = $('#company-list-datatable').DataTable({
             "bAutoWidth":false,
             "lengthMenu": [ [50, 100, 150, -1], [50, 100, 150, "All"] ],
@@ -121,8 +120,9 @@
             "processing": true,
             "severside": true,
             ajax: {
-                url: "{{route('document-officer.in-visa-candidate')}}",
+                url: "{{route('document-officer.candidate-data')}}",
                 data: function(d) {
+                    d.type = "{{ @$type }}";
                     d.company = $('#company').val();
                     d.demand = $('#demand').val();
                     d.medical = $('#medical').val();

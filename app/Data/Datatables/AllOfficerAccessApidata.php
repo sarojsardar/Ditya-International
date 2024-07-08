@@ -99,6 +99,8 @@ class AllOfficerAccessApidata
                 # code...
                 break;
         }
+
+        
         $companyCandidates->when($request->company, function($query, $company){
             $query->where('companies.id', $company);
         })
@@ -219,7 +221,7 @@ class AllOfficerAccessApidata
 
             'eticket_processes.status as eticket_status',
             'labour_permits.status as labour_permit_status',
-            'final_job.status as job_status'
+            // 'final_job.status as job_status'
         ]);
 
         return $companyCandidates;

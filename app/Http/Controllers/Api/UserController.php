@@ -84,20 +84,25 @@ class UserController extends Controller
     {
         // Validate the request data if needed
         $request->validate([
-            'passport_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'full_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'passport_photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'full_photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
         $user = Auth::user();
         $userId = $user->id;
-
         // Update or create user details
+
+
+        $userDetail = UploadPhoto::where('user_id', $userId)->latest()->first();
+        if(!$userDetail){
+            $request->validate([
+                'passport_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'full_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+        }
+
         $userDetail = UploadPhoto::updateOrCreate(
             ['user_id' => $userId],
-
         );
-
-
 
         // Validate and handle passport photo upload
         if ($request->hasFile('passport_photo')) {
@@ -126,17 +131,25 @@ class UserController extends Controller
 
     public function updatePassportDetails(Request $request){
         // Validate the request data if needed
-        $request->validate([
-            'passport_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+
+        $rules = [
+            'passport_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'passport_number' => 'required',
             'expiry_date' => 'required',
             'issue_place' => 'required',
             'passport_issue_date' => 'required',
 
-        ]);
+        ];
 
         $user = Auth::user();
         $userId = $user->id;
+        $userDetail = PassportDetail::where('user_id', $userId)->latest()->first();
+
+        if(!$userDetail){
+            $rules['passport_image'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        $request->validate($rules);
 
         // Update or create user details
         $userDetail = PassportDetail::updateOrCreate(
@@ -167,13 +180,21 @@ class UserController extends Controller
 
     public function updateResumeDetails(Request $request)
     {
-        // Validate the request data if needed
-        $request->validate([
-            'resume_file' => 'required|mimes:jpeg,png,jpg,pdf|max:4096',
-        ]);
+        $rules = [
+            'resume_file' => 'mimes:jpeg,png,jpg,pdf|max:4096',
+        ];
 
+        // Validate the request data if needed
+     
         $user = Auth::user();
         $userId = $user->id;
+
+        $userDetail = ResumeDetail::where('user_id', $userId)->latest()->first();
+        if(!$userDetail){
+            $rules['resume_file'] = 'required|mimes:jpeg,png,jpg,pdf|max:4096';
+        }
+        $request->validate($rules);
+
 
         // Update or create user details
         $userDetail = ResumeDetail::updateOrCreate(
@@ -186,7 +207,6 @@ class UserController extends Controller
             $resumeFile = $request->file('resume_file');
             $resumeName = pathinfo($resumeFile->getClientOriginalName(), PATHINFO_FILENAME);
             $resumeFilePath = (new ImageUploadHelper())->uploadImage($resumeFile, 'public/uploads/resume-files', $resumeName);
-
             $userDetail->resume_file = $resumeFilePath; // Corrected field name
         }
 
@@ -199,24 +219,47 @@ class UserController extends Controller
     public function updateEducationalDetails(Request $request)
     {
         // Validate the request data
-        $request->validate([
-            'edu_doc' => 'required|mimes:jpeg,png,jpg,pdf|max:4096', // Assuming single file, not an array
+        
+        $rules = [
+            'edu_doc' => 'mimes:jpeg,png,jpg,pdf|max:4096', // Assuming single file, not an array
             'level' => 'required',
             'edu_level' => 'required',
             'school_college_name' => 'required',
             'pass_year' => 'required'
-        ]);
-
+        ];
+       
         $user = Auth::user();
         $userId = $user->id;
         $educationType = EducationType::where('name', $request->level)->first();
 
         // Handle the educational document upload
         $eduDocFile = $request->file('edu_doc');
-        if ($eduDocFile && $eduDocFile->isValid()) {
-            $eduDocName = pathinfo($eduDocFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $eduDocPath = (new ImageUploadHelper())->uploadImage($eduDocFile, 'public/uploads/edu-doc', $eduDocName);
 
+        $eduDoc = EducationalDocument::where('user_id', $userId)->latest()->first();
+          if(!$eduDoc){
+               $rules['edu_doc'] = 'required|mimes:jpeg,png,jpg,pdf|max:4096'; // Assuming single file, not an array
+          }
+        
+        $request->validate($rules);
+
+        if(!$eduDoc){
+            if ($eduDocFile && $eduDocFile->isValid()) {
+                $eduDocName = pathinfo($eduDocFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $eduDocPath = (new ImageUploadHelper())->uploadImage($eduDocFile, 'public/uploads/edu-doc', $eduDocName);
+                // Update or create user educational detail
+                EducationalDocument::updateOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'level' => $request->level,
+                        'edu_level' => $educationType->edu_level,
+                        'school_college_name' => $request->school_college_name,
+                        'pass_year' => $request->pass_year,
+                    ],
+                    ['edu_doc' => $eduDocPath]
+                );
+            }
+        }else{
+            $eduDocPath = $eduDoc->edu_doc;
             // Update or create user educational detail
             EducationalDocument::updateOrCreate(
                 [
@@ -229,7 +272,6 @@ class UserController extends Controller
                 ['edu_doc' => $eduDocPath]
             );
         }
-
         return response()->json(['status' => true, 'message' => 'Educational detail updated successfully']);
     }
 

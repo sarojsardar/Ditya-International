@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Action\CandidateStatusNotificationAction;
-use App\Action\NotificationAction;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Year;
 use App\Models\Gender;
@@ -16,22 +15,24 @@ use App\Models\Interview;
 use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
 use App\Models\EducationType;
+use App\Enum\UserDemandStatus;
 use App\Jobs\SendInterviewSms;
+use App\Models\Medical\Medical;
 use App\Jobs\SendReinterviewSms;
 use App\Models\CompanyCandidate;
 use Yajra\DataTables\DataTables;
 use App\Data\company\CompanyData;
 use App\Data\Country\CountryData;
+use App\Enum\UserInterviewStatus;
+use App\Action\NotificationAction;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Candidat\MedicalCheckup;
+use Illuminate\Support\Facades\Validator;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Data\CompanyDemand\CompanyDemandData;
-use App\Enum\UserInterviewStatus;
-use App\Models\Candidat\MedicalCheckup;
-use App\Models\Medical\Medical;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
+use App\Action\CandidateStatusNotificationAction;
 
 class CompanyDemandController extends Controller
 {
@@ -124,6 +125,210 @@ class CompanyDemandController extends Controller
             'demands'=>$demands,
             'medicals'=>$medicals,
         ]);
+    }
+
+
+    public function medicalProcess(Request $request){
+        if($request->ajax()){
+            $companies = (new CompanyData())->companyList();
+            return DataTables::of($companies)
+                ->addIndexColumn()
+                ->addColumn('logo', function($row){
+                    $url = url('/storage/uploads/company-logo/'. $row->logo);
+                    return "<img src='{$url}' alt='company logo' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
+                })
+                ->addColumn('medical_status', function($row){
+                    $infoUrl = route('receptionist-demand.index', $row->user_id);
+                    $companyCandidate = CompanyCandidate::where('company_id', $row->id)
+                                        ->where('interview_status', 'Selected')
+                                        ->where('medical_status', '!=', null)
+                                        // This may be changed according to the status if required
+                                        // ->where('demand_status', 'Interview')
+                                        ->get();
+                    
+                    // this is developed according to old database design
+                    $companyUser = User::where('id', $row->user_id)->first();
+                    $currentDemand = CompanyDemand::where('company_id', $companyUser->id)->whereIn('status', ['Open', 'Pending'])->latest()->first();
+                    $tested = 0;
+                    $fit = 0;
+                    $unfit = 0;
+                    if($currentDemand){
+                        $medicalChecklups = MedicalCheckup::where([
+                            'demand_id'=>$currentDemand->id,
+                            'demand_code'=>$currentDemand->demand_code,
+                            'is_tested'=>true,
+                        ])->get();
+
+                        $tested = collect($medicalChecklups)->filter(function($row){
+                            return (bool)$row->is_tested == true;
+                        })->count();
+    
+    
+                        $fit = collect($medicalChecklups)->filter(function($row){
+                            return $row->status == 'Fit';
+                        })->count();
+
+                        $unfit = collect($medicalChecklups)->filter(function($row){
+                            return $row->status == 'Unfit';
+                        })->count();
+                    }
+                    $infoUrl = route('receptionist.medical-process.company.index', $row->user_id);
+                    $return_string = '
+                        <a href="'.$infoUrl.'">
+                            <div>
+                                <p class="m-0 p-0">Total:'.count($companyCandidate).'</p>
+                                <p class="m-0 p-0">Tested:'.$tested.'</p>
+                                <p class="m-0 p-0">Fit:'.$fit.'</p>
+                                <p class="m-0 p-0">Unfit:'.$unfit.'</p>';
+                            // this may be enable if required on the receptionist
+                            // $return_string .='<p class="m-0 p-0"><a class="btn btn-primary" href="'.$infoUrl.'" title="Info">View</a></p>';
+
+                        $return_string .= '</a></div>';
+                    return $return_string;
+                })
+                ->addColumn('country', function($row){
+                    return $row->originCountry->code.' | '.$row->originCountry->name;
+                })
+                ->addColumn('categories', function ($company) {
+                    return $company->categories->pluck('name')->implode(', ');
+                })
+                ->addColumn('email', function($row){
+                    return @$row->user->email;
+                })
+                ->addColumn('action', function($row){
+                    $infoUrl = route('receptionist.medical-process.company.index', $row->user_id);
+
+                    $editUrl = route('company.edit', $row->id);
+
+                    if(auth('web')->user()->hasRole('Receptionist'))
+                        return "<div>
+                        <a href='$infoUrl' title='Info'><button class='btn btn-sm btn-secondary'>View Demand</button></a>
+                        </div>";
+                    else {
+                        return "<div class='btn-group'>
+                        <a href='{$editUrl}' class='btn btn-group' title='Edit'><button class='btn btn-sm btn-primary'><i class='fas fa-pen'></i>Edit</button></a>
+                        </div>";
+                    }
+                })
+                ->rawColumns(['medical_status', 'DT_RowIndex', 'logo', 'action', 'selected'])
+                ->make(true);
+        }
+        return view('backend.pages.company.medical_process');
+    }
+
+
+    public function medicalProcessCandidate (Request $request, $companyUserId)
+    {
+
+        $demands = CompanyDemand::where('company_id', $companyUserId)->get();
+        $medicals = Medical::all();
+        return view('backend.pages.all-demands.receptionist.medical-process-show', [
+            'demands' => $demands, // Make sure this variable is correctly set for your view
+            'medicals'=>$medicals,
+            'currentDemand' => session('currentDemand')
+        ]);       
+    }
+
+
+    
+    public function medicalProcessCandidatedata(Request $request, $demandcode)
+    {
+        $companyDemand = CompanyDemand::where('demand_code', $demandcode)->whereIn('status', ['Open', 'Pending'])->latest()->firstOrFail();
+        if ($request->ajax()) {
+            $demandId = $companyDemand->id;
+            $filteredUsers = User::where('user_type', UserTypes::CANDIDATE)
+                ->whereHas('candidateCompany', function ($query) {
+                    $query->where('demand_status', UserDemandStatus::Interview);
+                })
+                ->whereHas('candidateCompany', function ($query) {
+                    $query->where('interview_status', [UserInterviewStatus::Selected]);
+                })
+                ->whereHas('candidateCompany', function ($query) use ($demandId) {
+                    $query->where('demand_id', $demandId);
+                })
+                ->get();
+
+            if ($filteredUsers->isEmpty()) {
+                return DataTables::of([])->make(true);
+            }
+
+            return DataTables::of($filteredUsers)
+                ->addIndexColumn()
+                // Add your columns as before
+                ->addColumn('full_name', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->full_name;
+                })
+                ->addColumn('permanent_address', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->permanent_address;
+                })
+                ->addColumn('gender', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->gender;
+                })
+                ->addColumn('age', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->age;
+                })
+
+                ->addColumn('height', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->height;
+                })
+
+                ->addColumn('weight', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->userDetail)->weight;
+                })
+                ->addColumn('passport_number', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->passportDetail)->passport_number;
+                })
+
+                ->addColumn('expiry_date', function($row){
+                    // Use optional to avoid trying to get property of non-object
+                    return optional($row->passportDetail)->expiry_date;
+                })
+
+                ->addColumn('total_work_experience', function($row){
+                    return $row->total_work_experience;
+                })
+                ->addColumn('interview_status', function($row) use($companyDemand) {
+                    // Ensure the demand_status is fetched; you might need to adjust this depending on your model structure
+                    // wrong code
+                    $companyCandidate = CompanyCandidate::where([
+                        'user_id' => $row->id,
+                        'demand_id' => $companyDemand->id,
+                    ])->latest()->first();
+                    return $companyCandidate->interview_status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                })
+
+                ->addColumn('medical_status', function($row) use($companyDemand) {
+                    $medicalCheckup = MedicalCheckup::where([
+                        'user_id' => $row->id,
+                        'demand_id' => $companyDemand->id,
+                    ])->latest()->first();
+                    // $companyCandidate = CompanyCandidate::where([
+                    //     'user_id' => $row->id,
+                    //     'demand_id' => $companyDemand->id,
+                    // ])->latest()->first();
+                    return $medicalCheckup?->status ?? 'N/A'; // Assuming candidateCompany is the relationship name
+                })
+                // Add other columns...
+                ->addColumn('action', function ($row) {
+                    $printUrl = route('candidate.printCandidateApplication', ['id' => $row->id]);
+                    return "<div>
+                    <a href='{$printUrl}' target='_blank' title='Print'><button class='btn btn-sm btn-secondary'><i class='mdi mdi-cloud-print'></i></button></a>
+                    <button class='btn btn-sm btn-secondary' data-toggle='modal' data-target='#printModal' data-url='{$row->printUrl}'>
+                        <i class='mdi mdi-cloud-print'></i>
+                    </button>
+                    </div>";
+                })
+                ->rawColumns(['DT_RowIndex', 'full_name','action','gender','passport_number','expiry_date','total_work_experience','age','height','weight','interview_status'])
+                ->make(true);
+        }
+       
     }
 
 
@@ -280,13 +485,33 @@ class CompanyDemandController extends Controller
                 }
               
             }
-            
-            CompanyCandidate::create([
+
+            $companyCandidate = CompanyCandidate::where([
                 'user_id' => $id,
                 'company_id' => $company_id,
                 'demand_id' => $request->demand_id,
-                'demand_status' => $request->demand_status
-            ]);
+            ])->first();
+
+            // dd($companyCandidate);
+
+            if($companyCandidate){
+                if($request->has('interview_status')){
+                    $companyCandidate->interview_status = $request->interview_status;
+                }
+                if($request->has('demand_status')){
+                    $companyCandidate->demand_status = $request->demand_status;
+                }
+                $companyCandidate->save();
+            }else{
+                CompanyCandidate::updateOrCreate([
+                    'user_id' => $id,
+                    'company_id' => $company_id,
+                    'demand_id' => $request->demand_id,
+                ],[
+                    // 'interview_status'=>$request->interview_status,
+                    'demand_status' => ($request->demand_status ?? "Interview"),
+                ]);
+            }
 
 
             // new code added for the notification

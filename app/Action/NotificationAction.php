@@ -17,6 +17,8 @@ class NotificationAction
     protected $generated_to_id;
     protected $send_to;
     protected $go_to_url;
+    protected $content_type;
+    protected $document_process_id;
     function __construct(
         $title,
         $web_content=null, 
@@ -27,7 +29,9 @@ class NotificationAction
         $generated_to="System",
         $generated_to_id = 0,
         $send_to = 4,
-        $go_to_url = "#"
+        $go_to_url = "#",
+        $content_type = 'normal',
+        $document_process_id = null
     )
     {
         $this->title = $title;
@@ -40,6 +44,8 @@ class NotificationAction
         $this->generated_to_id = $generated_to_id;
         $this->send_to = $send_to;
         $this->go_to_url = $go_to_url;
+        $this->content_type = $content_type;
+        $this->document_process_id = $document_process_id;
     }
     private function pushToSms()
     {
@@ -74,6 +80,8 @@ class NotificationAction
                     'is_auto'=>$this->is_auto ?? true,
                     'send_to'=>$this->send_to,
                     'go_to_url'=>$this->go_to_url ?? "#",
+                    'content_type'=>$this->content_type,
+                    'document_process_id'=>$this->document_process_id,
                 ]);
 
                 $this->pushToSms();

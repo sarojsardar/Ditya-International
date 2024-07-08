@@ -156,7 +156,7 @@ class User extends Authenticatable
 
     public function candidateCompany()
     {
-        return $this->hasOne(CompanyCandidate::class); // Use hasMany if a user can have multiple company associations
+        return $this->hasMany(CompanyCandidate::class, 'user_id'); // Use hasMany if a user can have multiple company associations
     }
 
     public function comment()
