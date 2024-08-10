@@ -19,8 +19,8 @@ class NotificationEvent
      * Create a new event instance.
      */
 
-    public $notification;
-    public function __construct(Notification $notification)
+    public $notification, $channel;
+    public function __construct(Notification $notification, $channel)
     {
         $this->notification = $notification;
     }
@@ -33,7 +33,7 @@ class NotificationEvent
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PrivateChannel($this->channel),
         ];
     }
 }

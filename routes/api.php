@@ -125,7 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/interviewInvites', [InterviewController::class, 'interviewInvites']);
 
-    Route::post('/interviewStatus/{id}', [InterviewController::class, 'updateStatus'])->name('changeStatus');
+    Route::post('/interviewStatus/{interviewId}', [InterviewController::class, 'updateStatus'])->name('changeStatus');
     
     // for the candidate notification
     Route::group(['middleware'=>'auth:sanctum'], function(){

@@ -170,6 +170,13 @@ class User extends Authenticatable
         return $this->hasMany(Interview::class, 'user_id');
     }
 
+
+    
+    public function visa_processes():HasMany
+    {
+        return $this->hasMany(VisaProcess::class, 'user_id');
+    }
+
     //  user type MEDICAL_OFFICER and the user role is Medical Officer
     public function medicals():BelongsToMany
     {

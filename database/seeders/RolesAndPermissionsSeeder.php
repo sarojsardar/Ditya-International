@@ -36,7 +36,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $candidateInterviewManagementPermissions = ['interview-approve', 'interview-reject', 'interview-comment', 'interview-read'];
         $documentProcessPermissions = ['document-read', 'document-approve', 'document-reject', 'document-update'];
         $webContentPermissions = ['webContent-create', 'webContent-read', 'webContent-update', 'webContent-delete'];
-        $medicalPermissions = ['medical-create', 'medical-read', 'medical-update', 'medical-delete'];
+        $medicalPermissions = [];
         $pettyCashPermissions = ['pettyCash-request', 'pettyCash-read', 'pettyCash-reject', 'pettyCash-approve'];
         $invoicePermissions = ['invoice-request', 'invoice-read', 'invoice-update', 'invoice-delete'];
         $expensesPermission = ['expense-create', 'expense-delete', 'expense-read', 'expense-statement'];

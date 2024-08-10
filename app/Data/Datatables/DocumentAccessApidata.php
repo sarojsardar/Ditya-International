@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Enum\CandiateAccessEnum;
 use App\Models\CompanyCandidate;
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Country;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +39,7 @@ class DocumentAccessApidata
             ->leftJoin('users as candidates', 'candidates.id', '=', 'company_candidates.user_id')
             ->leftJoin('user_details as candidate_details', 'candidate_details.user_id', '=', 'candidates.id')
             ->leftJoin('user_information as candidate_information', 'candidate_information.user_id', '=', 'candidates.id')
+            ->leftJoin('upload_photos', 'candidates.id', '=', 'upload_photos.user_id')
             ->leftJoin('medical_checkups', function ($join) {
                 $join->on('medical_checkups.user_id', '=', 'candidates.id')
                     ->on('medical_checkups.company_id', '=', 'company_candidates.company_id')
@@ -167,6 +169,9 @@ class DocumentAccessApidata
                 $query->where('final_jobstatuses.status', (int)$engaged_status);
             });
 
+
+
+            
             switch ($type) {
                 case CandiateAccessEnum::NEW_FOR_VISA:
                     $companyCandidates->where([
@@ -211,7 +216,6 @@ class DocumentAccessApidata
                 case CandiateAccessEnum::TICKETING:
                     $companyCandidates->whereIn('visa_processes.status', ['Successed'])
                         ->whereIn('labour_permits.status', ['Successed'])
-                        ->whereIn('labour_permits.status', ['Successed'])
                         ->whereIn('eticket_processes.status', ['Successed'])
                         ->where('candidates.demand_status', '!=', "Completed")
                         ->where('company_candidates.demand_status', '!=', "Completed")
@@ -221,7 +225,6 @@ class DocumentAccessApidata
 
                 case CandiateAccessEnum::ENGAGED:
                     $companyCandidates->whereIn('visa_processes.status', ['Successed'])
-                        ->whereIn('labour_permits.status', ['Successed'])
                         ->whereIn('labour_permits.status', ['Successed'])
                         ->whereIn('eticket_processes.status', ['Successed'])
                         ->where('candidates.demand_status', "Completed")
@@ -277,17 +280,17 @@ class DocumentAccessApidata
                 'candidate_details.permanent_address as candidate_permanent_address',
                 'candidate_details.temporary_address as candidate_temporary_address',
                 'candidate_details.gender as candidate_gender',
+                'candidates.mobile_no as candidate_contact',
 
                 'candidate_information.first_name as candidate_first_name',
                 'candidate_information.last_name as candidate_last_name',
                 'candidate_information.middle_name as middle_name',
                 'candidate_information.full_address as candidate_full_address',
-                'candidate_information.contact as candidate_contact',
-                'candidate_information.profile_picture as candidate_profile_picture',
+                'upload_photos.passport_photo as candidate_profile_picture',
 
                 'medical_checkups.medical_id',
                 'medical_checkups.checkup_date',
-                'medical_checkups.status as medical_status',
+                'medical_checkups.status as checkup_medical_status',
                 'medical_checkups.is_tested',
                 
                 'document_processes.status as document_status',
@@ -299,7 +302,7 @@ class DocumentAccessApidata
                 'final_jobstatuses.status as job_status',
                 // new developed
                 'candidates.demand_status as user_demand_status',
-            ]);
+            ])->distinct();
 
 
             // dd($companyCandidates->toSql());
@@ -309,21 +312,22 @@ class DocumentAccessApidata
             ->addColumn('checkup_date', function ($row) {
                 return Carbon::parse($row->checkup_date)->format('Y-m-d g:i A');
             })
-            ->addColumn('medical_status', function ($row) {
+            ->editColumn('medical_status', function ($row) {
                 $returnString = "Not Tested";
-                if ($row->medical_status == "Fit") {
-                    $returnString = '<span class="badge bg-primary text-white">' . $row->medical_status . '</span>';
+                if ($row->checkup_medical_status == "Fit") {
+                    $returnString = '<span class="badge bg-primary text-white">' . $row->checkup_medical_status . '</span>';
                 }
-                if ($row->medical_status == "Unfit") {
-                    $returnString = '<span class="badge bg-danger text-white">' . $row->medical_status . '</span>';
+                if ($row->checkup_medical_status == "Unfit") {
+                    $returnString = '<span class="badge bg-danger text-white">' . $row->checkup_medical_status . '</span>';
                 }
                 return $returnString;
             })
             ->addColumn('company_info', function ($row) {
+                $country = Country::where('id', $row->company_country)->first();
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Company Name:<a href="#">' . $row->company_name . '</a></p>
-                        <p class="p-0 m-0">Country: ' . $row->company_country . ' </p>
+                        <p class="p-0 m-0">Country: ' . $country?->name . ' </p>
                         <p class="p-0 m-0">Address: ' . $row->company_address . '</p>
                     </div>
                 ';
@@ -338,8 +342,9 @@ class DocumentAccessApidata
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Name:<a href="' . $showUrl . '">' . $row->candidate_full_name . '</a></p>
-                        <p class="p-0 m-0">Country: ' . $row->candidate_full_address . ' </p>
-                        <p class="p-0 m-0">Gender: ' . $row->candidate_gender . '</p>
+                        <p class="p-0 m-0">Permanent Asddress: ' . $row->candidate_permanent_address . ' </p>
+                         <p class="p-0 m-0">Temporary Asddress: ' . $row->candidate_temporary_address . ' </p>
+                        <p class="p-0 m-0">Gender: ' . ucfirst($row->candidate_gender) . '</p>
                         <p class="p-0 m-0">Email: ' . $row->candidate_email . '</p>
                         <p class="p-0 m-0">Contact: ' . $row->candidate_contact . '</p>
                     </div>
@@ -347,7 +352,7 @@ class DocumentAccessApidata
                 return $return_string;
             })
             ->addColumn('profile', function ($row) {
-                $url = url('/storage/uploads/company-logo/' . $row->candidate_profile_picture);
+                $url = url('/storage/uploads/passport-photos/' . $row->candidate_profile_picture);
                 return "<img src='{$url}' alt='Profile Picture' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
             })
             ->addColumn('action', function ($row) {

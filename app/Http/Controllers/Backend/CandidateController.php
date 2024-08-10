@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Data\Candidate\CandidateData;
 use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\VisaProcess;
 use Yajra\DataTables\Facades\DataTables;
 use App\Notifications\DemandNotification;
 use Carbon\Carbon;
@@ -471,6 +472,10 @@ class CandidateController extends Controller
                     $query->whereColumn('interviews.user_id', 'users.id')
                           ->where('interviews.demand_id', $demand->id);
                 })
+                ->whereDoesntHave('visa_processes', function (Builder $query) use ($demand) {
+                    $query->whereColumn('visa_processes.user_id', 'users.id')
+                          ->where('visa_processes.demand_id', $demand->id);
+                })
                 ->get();
         } else {
             // Handle cases where the auth user or their company info is not available
@@ -482,6 +487,9 @@ class CandidateController extends Controller
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
         
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
+
+            dd($user);
+
             $userLanguageIds = $user->manyLanguages->pluck('id')->all();
 
             $userCategoryIds = DB::table('category_details')
@@ -496,6 +504,9 @@ class CandidateController extends Controller
             $matchingCategories = array_intersect($requiredCategoryIds, $userCategoryIds);
             $categoryCheck = !empty($matchingCategories); // True if there's at least one match
 
+            // $visaProcess = false;
+            // $visa = VisaProcess::where('user_id', $user->id)->where('demand_id', )
+            
             // Include users who pass both checks
             return $languageCheck && $categoryCheck;
         });

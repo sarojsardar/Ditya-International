@@ -152,30 +152,34 @@
         </li>
         @endcan
 
-        <li
-            class="menu-item {{ Request::is('user/medical*') ? 'active' : '' }}">
+
+        @can(['medical-create', 'medical-read', 'medical-update', 'medical-delete'])
+        <li class="menu-item {{ Request::is('user/medical*') ? 'active' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon ri-hospital-line"></i>
                 <div data-i18n="Medical">Medical </div>
             </a>
 
             <ul class="menu-sub">
-                {{-- @can(['demand-create']) --}}
+                @can(['medical-create'])
                 <li class="menu-item">
                     <a href="{{ route('medical.create') }}" class="menu-link">
                         <div data-i18n="Create">Create</div>
                     </a>
                 </li>
-                {{-- @endcan --}}
-                {{-- @can(['demand-read']) --}}
+                @endcan
+                @can(['medical-read'])
                 <li class="menu-item ">
                     <a href="{{ route('medical.index') }}" class="menu-link">
                         <div data-i18n="List">List</div>
                     </a>
                 </li>
-                {{-- @endcan --}}
+                @endcan
             </ul>
         </li>
+        @endcan
+
+
 
         @can(['all-demand-read'])
 

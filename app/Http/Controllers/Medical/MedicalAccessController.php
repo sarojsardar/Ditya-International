@@ -13,6 +13,7 @@ use App\Models\CompanyCandidate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class MedicalAccessController extends Controller
@@ -47,6 +48,18 @@ class MedicalAccessController extends Controller
             $medicalCheckup = MedicalCheckup::findOrFail($medicalCheckupId);
             $medicalCheckup->is_tested = true;
             $medicalCheckup->status = $request->status;
+
+            $report = null;
+            if($request->has('report')){
+                $reps = [];
+                foreach($request->report as $report){
+                    $rep = Storage::disk('public')->put('medical-report', $report);
+                    $rep = asset('storage').'/'.$rep;
+                    $reps[] = $rep;
+                }
+                $medicalCheckup->report = json_encode($reps);
+            }
+
             $medicalCheckup->save();
             $companyCandidate = CompanyCandidate::where([
                 'demand_id'=>$medicalCheckup->demand_id,

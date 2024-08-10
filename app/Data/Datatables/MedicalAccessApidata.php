@@ -44,7 +44,7 @@ class MedicalAccessApidata
             }else{
                 $query->where('status', $status);
             }
-        });
+        })->distinct();
         
         return DataTables::of($medicalCheckUps)
             ->addIndexColumn()
@@ -81,35 +81,38 @@ class MedicalAccessApidata
 
             ->addColumn('candidate_info', function($row){
                 $candidate = '';
-                if($row->candidate?->userInfo->first_name){
-                    $candidate = $row->candidate?->userInfo->first_name . ' '.$row->candidate?->userInfo->middle_name.' '.$row->candidate?->userInfo->last_name;
+                if($row->candidate?->userDetail?->full_name){
+                    $candidate = $row->candidate?->userDetail?->full_name;
                 }else{
                     $candidate = $row->name;
                 }
-                $address =  ($row->candidate?->userInfo?->full_address ?? $row->candidate?->address) ?? "N/A";
+                $temporaryAddress = $row->candidate?->userDetail?->temporary_address;
+                $permanentAddress = $row->candidate?->userDetail?->permanent_address;
+                $address =  ($row->candidate?->userDetail?->temporary_address . $row->candidate?->userDetail?->permanent_address) ?? "N/A";
                 $gender =  $row->candidate?->userDetail?->gender ?? "N/A" ;
                 $email = $row->candidate?->email ?? "N/A";
-                $contact_no = $row->candidate?->userDetail?->contact ?? "N/A";
+                $contact_no = ($row->candidate?->userDetail?->contact ?? $row->candidate->mobile_no) ?? "N/A";
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Name:<a href="#">'.$candidate.'</a></p>
-                        <p class="p-0 m-0">Country: '.$address.' </p>
-                        <p class="p-0 m-0">Gender: '.$gender.'</p>
+                        <p class="p-0 m-0">Temporary Address: '.$temporaryAddress.' </p>
+                        <p class="p-0 m-0">Permanent Address: '.$permanentAddress.' </p>
+                        <p class="p-0 m-0">Gender: '.ucfirst($gender).'</p>
                         <p class="p-0 m-0">Email: '.$email.'</p>
-                        <p class="p-0 m-0">Email: '.$contact_no.'</p>
+                        <p class="p-0 m-0">Contact: '.$contact_no.'</p>
                     </div>
                 ';
                 return $return_string;
             })
             ->addColumn('profile', function($row){
-                $profile =  $row->candidate?->userInfo?->profile_picture;
-                $url = url('/storage/uploads/company-logo/'. $profile);
+                $profile =  $row->candidate?->uploadPhoto?->passport_photo;
+                $url = url('/storage/uploads/passport-photos/'. $profile);
                 return "<img src='{$url}' alt='Profile Picture' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
             })
             ->addColumn('action', function($row){
                 $candidate = '';
-                if($row->candidate?->userInfo->first_name){
-                    $candidate = $row->candidate?->userInfo->first_name . ' '.$row->candidate?->userInfo->middle_name.' '.$row->candidate?->userInfo->last_name;
+                if($row->candidate?->userDetail?->full_name){
+                    $candidate = $row->candidate?->userDetail?->full_name;
                 }else{
                     $candidate = $row->name;
                 }

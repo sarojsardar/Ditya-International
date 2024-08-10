@@ -2,6 +2,7 @@
 namespace App\Data\Datatables;
 
 use Carbon\Carbon;
+use App\Models\Country;
 use Illuminate\Http\Request;
 use App\Enum\CandiateAccessEnum;
 use App\Models\CompanyCandidate;
@@ -107,7 +108,7 @@ class AllOfficerAccessApidata
         ->when($request->demand, function($query, $demand){
             $query->where('company_candidates.demand_id', $demand);
         })
-        ->when($request->medical_status, function($query, $status){
+        ->when($request->checkup_medical_status, function($query, $status){
             if($status == "All"){
 
             } elseif($status == "Scheduled"){
@@ -212,7 +213,7 @@ class AllOfficerAccessApidata
 
             'medical_checkups.medical_id',
             'medical_checkups.checkup_date',
-            'medical_checkups.status as medical_status',
+            'medical_checkups.status as checkup_medical_status',
             'medical_checkups.is_tested',
 
             'document_processes.status as document_status',
@@ -222,7 +223,7 @@ class AllOfficerAccessApidata
             'eticket_processes.status as eticket_status',
             'labour_permits.status as labour_permit_status',
             // 'final_job.status as job_status'
-        ]);
+        ])->distinct();
 
         return $companyCandidates;
     }
@@ -235,10 +236,11 @@ class AllOfficerAccessApidata
                 return Carbon::parse($row->checkup_date)->format('Y-m-d g:i A');
             })
             ->addColumn('company_info', function($row){
+                $country = Country::where('id', $row->company_country)->first();
                 $return_string = '
                     <div>
                         <p class="p-0 m-0">Company Name:<a href="#">'.$row->company_name.'</a></p>
-                        <p class="p-0 m-0">Country: '.$row->company_country.' </p>
+                        <p class="p-0 m-0">Country: '.$country?->name.' </p>
                         <p class="p-0 m-0">Address: '.$row->company_address.'</p>
                     </div>
                 ';
@@ -265,7 +267,7 @@ class AllOfficerAccessApidata
                         <p class="p-0 m-0">Email: '.$row->candidate_email.'</p>
                         <p class="p-0 m-0">Contact: '.$row->candidate_contact.'</p>
                         <p class="p-0 m-0">Interview Status: '.$row->interview_status.'</p>
-                        <p class="p-0 m-0">Medical Status: '.$row->medical_status.'</p>
+                        <p class="p-0 m-0">Medical Status: '.$row->checkup_medical_status.'</p>
                         <p class="p-0 m-0">Document Status: '.$row->document_status.'</p>
                         <p class="p-0 m-0">Visa Status: '.$row->visa_status.'</p>
                         <p class="p-0 m-0">E Visa Status: '.($row->evisa_status ?? "N/A").'</p>

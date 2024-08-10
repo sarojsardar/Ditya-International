@@ -189,6 +189,8 @@ class DocumentAccessController extends Controller
                 'demand_id'=>$companyCandidate->demand_id,
             ]);
         }
+
+        // dd($documentProcess);
         $documentProcess->status = $request->status ?? "Completed";
         $documentProcess->save();
         session()->flash('success', 'Successfully The Document Status has been completed');
@@ -719,12 +721,15 @@ class DocumentAccessController extends Controller
 
     public function uploadDocument(Request $request, $companyCandidateId)
     {
+        DB::beginTransaction();
         try {
             $companyCandidate = CompanyCandidate::where('id', $companyCandidateId)->latest()->first();
             (new DocumentAction($request))->uplodaAllDocument($companyCandidate);
+            DB::commit();
             session()->flash('success', 'Successfully Uploaded');
             return back();
         } catch (\Throwable $th) {
+            DB::rollBack();
             info($th->getMessage());
             session()->flash('error', $th->getMessage());
             return back();

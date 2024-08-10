@@ -31,7 +31,7 @@ class CheckStepController extends Controller
         // Initialize the required details array
         $requiredDetails = [
             'full_name', 'permanent_address', 'temporary_address',
-            'father_name', 'mother_name', 'marital_status', 'gender', 'height', 'weight', 'dob'
+            'father_name', 'mother_name', 'marital_status', 'gender', 'height', 'weight', 'dob', 'has_relatives_in_malaysia', 'has_been_in_accident'
         ];
         
 
@@ -50,13 +50,13 @@ class CheckStepController extends Controller
 
         // Check each required detail
         foreach ($requiredDetails as $detail) {
-            if (empty($userDetails->$detail)) {
+            if (!$userDetails->$detail) {
                 $missingDetails[] = $detail;
             }
         }
 
         // Construct the response based on whether any details are missing
-        if (empty($missingDetails)) {
+        if (count($missingDetails) > 0) {
             // Construct the data array only if all details are present
             $data = [
                 'full_name' => $userDetails->full_name,
@@ -70,6 +70,9 @@ class CheckStepController extends Controller
                 'marital_status' => $userDetails->marital_status,
                 'spouse_name' => $userDetails->spouse_name,
                 'gender' => $userDetails->gender,
+                'has_relatives_in_malaysia'=>$userDetails->has_relatives_in_malaysia,
+                'has_been_in_accident'=>$userDetails->has_been_in_accident,
+
             ];
 
             return response()->json([
@@ -121,7 +124,7 @@ class CheckStepController extends Controller
         // Reindex array to ensure consecutive keys
         $missingDetails = array_values($missingDetails);
 
-        if (empty($missingDetails)) {
+        if (count($missingDetails) <= 0) {
             return response()->json([
                 'data' => $data,
                 'message' => 'All photo details are filled',

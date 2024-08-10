@@ -171,6 +171,7 @@
                     d.demand = $('#demand').val();
                     d.selected_date = $('#selected_date').val();
                     d.status = $('#status').val();
+                    d.type= "{{@$type}}";
                 },
                 type: 'GET',
                 tryCount : 0,

@@ -7,6 +7,30 @@
 @section('content')
 
     <div class="container-xxl flex-grow-1 container-p-y">
+
+        <div class="card mb-4">
+            <div class="card-widget-separator-wrapper">
+                <div class="card-body card-widget-separator">
+                    <div class="row gy-4 gy-sm-1">
+                        <div class="col-sm-12">
+                            <div class="d-flex justify-content-end align-items-start card-widget-1 border-end pb-3 pb-sm-0">
+                                @forelse($demands as $demand)
+                                @isset($demand->company_id)
+                                    <a href="#" data-type="move_to_medical" data-demad_id="{{$demand->id}}" class="action-btn p-1 m-1 btn btn-sm btn-primary waves-effect waves-light">Move To Medical</a>
+                                @endisset
+                                @empty
+                                    <p>No demands available.</p> <!-- Consider showing a message or a different link when there are no demands -->
+                                @endforelse
+                            </div>
+                            <hr class="d-none d-sm-block d-lg-none me-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -42,10 +66,13 @@
                                                 <table class="table table-bordered dt-responsive nowrap" id="approvedCandidatesTable{{ $demand->id }}" data-demand-code="{{ $demand->demand_code }}">
                                                     <thead>
                                                     <tr>
-                                                        <th>S.N</th>
-                                                        <th>Medical Status</th>
+                                                        <th><input type="checkbox" id="select-all" onclick="selectAll(this)"></th>
+                                                        <th>Status</th>
                                                         <th>Full Name</th>
                                                         <th>Gender</th>
+                                                        <th>Address</th>
+                                                        <th>Age</th>
+                                                        <th>Action</th>
                                                     </tr>
                                                     </thead>
                                                 </table>
@@ -64,8 +91,6 @@
         </div>
     </div>
 
-
-  
     <div class="modal fade" id="move_to_medical" tabindex="-1" role="dialog" aria-labelledby="move_to_medicalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
 
@@ -93,8 +118,8 @@
                       </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary">Move Now</button>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Move Now</button>
                     </div>
                 </div>    
             </form>
@@ -114,6 +139,7 @@
                 initDataTableForActiveTab();
             });
         });
+
         function initDataTableForActiveTab() {
             var activeTabPane = $('.tab-pane.active');
             var tableId = $('table', activeTabPane).attr('id');
@@ -121,7 +147,7 @@
             // Check if the DataTable instance already exists
             if (!$.fn.DataTable.isDataTable('#' + tableId)) {
                 var demandCode = $('#' + tableId).data('demand-code');
-                var selectedCandidatesUrl = "{{ route('receptionist.medical-process.company.data', ':demandCode') }}".replace(':demandCode', demandCode) + '?type=selected';
+                var selectedCandidatesUrl = "{{ route('receptionist.selected.candidates', ':demandCode') }}".replace(':demandCode', demandCode) + '?type=selected';
 
                 // Initialize DataTable with the dynamic URL and configurations
                 initDataTable(tableId, selectedCandidatesUrl);
@@ -144,19 +170,33 @@
                     "type": "GET",
                 },
                 "columns": [
-                    {
-                        "data": "DT_RowIndex",
-                        searchable: false, 
-                        orderable: false
-                    },
-                    {
-                        "data": "medical_status"
+                    { 
+                        "data": "id", 
+                        "orderable": false, 
+                        "searchable": false, 
+                        "render": function(data, type, row) {
+                            console.log(row);
+                            return (row.medical_checkup == 0 ? `<input type="checkbox" name="selectedCandidates[]" value="${data}">` : '');
+                        }
                     },
                     {
                         "data": "full_name"
                     },
                     {
                         "data": "gender"
+                    },
+                  
+                    {
+                        "data": "age"
+                    },
+                    {
+                        "data": "height"
+                    },
+                    {
+                        "data": "weight"
+                    },
+                    {
+                        "data": "id",
                     },
                 ],
                 "initComplete": function() {

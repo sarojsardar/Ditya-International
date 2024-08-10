@@ -102,8 +102,9 @@ class CompanyDemandController extends Controller
     }
 
     public function managerIndex($companyId){
-
-        $demands =  CompanyDemand::where('company_id', $companyId)->orderBy('created_at', 'desc')->get();
+        // new edited to get company demand data by the user_id, not the company id
+        $company = Company::where('id', $companyId)->latest()->first();
+        $demands =  CompanyDemand::where('company_id', $company->user_id)->orderBy('created_at', 'desc')->get();
         return view('backend.pages.all-demands.managerIndex', compact('demands'));
     }
 
@@ -371,7 +372,6 @@ class CompanyDemandController extends Controller
     }
 
     public function store(Request $request){
-
         $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
         if($demand){
             session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
@@ -379,9 +379,7 @@ class CompanyDemandController extends Controller
         }
         DB::beginTransaction();
         try{
-
             (new CompanyDemandData($request))->store();
-
             DB::commit();
             return redirect()->route('company-demand.index')->with('success', 'Demand generated successfully');
 
@@ -394,12 +392,12 @@ class CompanyDemandController extends Controller
 
     public function update(Request $request, $id){
         // Validate the company ID first
-        $request->validate([
-            'company_id' => 'required|exists:companies,id',
-        ]);
+        // $request->validate([
+        //     'company_id' => 'required|exists:companies,id',
+        // ]);
 
         // Use findOrFail to automatically throw a ModelNotFoundException if no company is found
-        $company = Company::findOrFail($request->company_id);
+        // $company = Company::findOrFail($request->company_id);
 
         // Validate the rest of the request data
         $request->validate([
@@ -442,6 +440,7 @@ class CompanyDemandController extends Controller
             // }
 
             DB::commit();
+            return back();
             return redirect()->route('company-demand.index')->with('success', 'Demand updated successfully');
 
         // } catch (\Exception $e) {

@@ -2,16 +2,21 @@
 
 namespace App\Action;
 
-use App\Enum\DocumentRequirementEnum;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use App\Enum\UserDemandStatus;
+use App\Models\UserInformation;
 use App\Models\CompanyCandidate;
+use App\Jobs\NotifyVisaReceivedJob;
+use App\Jobs\NotifyMoveToMedicalJob;
+use App\Jobs\NotifyProceedToVisaJob;
+use App\Enum\DocumentRequirementEnum;
+use App\Jobs\NotifyEticketReceivedJob;
+use App\Jobs\NotifyLabourPermitReceivedJob;
 use App\Models\Candidat\MedicalCheckup;
 use App\Models\Candidate\DocumentProcess;
-use App\Models\UserInformation;
 
 class CandidateStatusNotificationAction
 {
@@ -87,22 +92,70 @@ class CandidateStatusNotificationAction
     }
     public function moveToMedical($medicalCheckupIds)
     {
-         // Notification must be developed
+        NotifyMoveToMedicalJob::dispatch($medicalCheckupIds);
     }
     public function updateMedicalCheckupStatus(MedicalCheckup $medicalCheckup)
     {
-         // Notification must be developed
+        $go_to_url = '#';
+        $receiver = User::find($medicalCheckup->user_id);
+        if($receiver){
+            $company = Company::find($medicalCheckup->company_id);
+            $this->title = "Medical Report Received";
+            $web_content = 'Your Medical Checkup Date has been scheduled at '. \Carbon\Carbon::parse($medicalCheckup->checkup_date)->format('Y-m-d H:i').' For the demand '. $medicalCheckup->demand_code .' By '.$company->name .'<a href="'.@$go_to_url.'">View More</a>';
+            $mobile_content = 'Your Medical Checkup Date has been scheduled at '. \Carbon\Carbon::parse($medicalCheckup->checkup_date)->format('Y-m-d H:i').' For the demand '. $medicalCheckup->demand_code .' By '.$company->name .'<a href="'.@$go_to_url.'">View More</a>';
+            $this->pushNotification();
+        }
     }
     public function proceedToVisa($visaProcessId)
     {
-        // Notification must be developed
+        NotifyProceedToVisaJob::dispatch($visaProcessId, 'Visa');
     }
-
 
     public function proceedToEVisa($visaProcessId)
     {
-        // Notification must be developed
+        NotifyProceedToVisaJob::dispatch($visaProcessId, 'EVisa');
     }
+
+    public function visaReceived($visaProcessId)
+    {
+        NotifyVisaReceivedJob::dispatch($visaProcessId, 'Visa');
+    }
+    public function eVisaReceived($visaProcessId)
+    {
+        NotifyVisaReceivedJob::dispatch($visaProcessId, 'EVisa');
+    }
+
+    
+
+    public function updateVisaStatus($processIds, $visaType="Proceed")
+    {
+        NotifyVisaReceivedJob::dispatch($processIds, 'Visa');
+    }
+
+    public function updateEVisaStatus($eVisaIds)
+    {
+        NotifyVisaReceivedJob::dispatch($eVisaIds, 'EVisa');
+    }
+
+
+    public function updateLabourPermitStatus($labourPermitIds)
+    {
+        NotifyLabourPermitReceivedJob::dispatch($labourPermitIds);
+    }
+
+   
+
+
+    public function updateETicketStatus($eTicketIds)
+    {
+        NotifyEticketReceivedJob::dispatch($eTicketIds);
+    }
+
+    public function updateCancelledNotification(CompanyCandidate $companyCandidate)
+    {
+        
+    }
+    
 
     public function sendRequiredDocumentNotification(Request $request, CompanyCandidate $companyCandidate)
     {
@@ -155,7 +208,7 @@ class CandidateStatusNotificationAction
                     </p>
                 ";
             }
-            $mobile_content = "Dear ".$candidateName."\n Your Are Receiving the email Due the The Document Requirement, Please Contact, Or Fill au an provide the following document";
+            $mobile_content = "Dear ".$candidateName."\n Your Are Receiving the sms Due the The Document Requirement, Please Contact, Or Fill au an provide the following document";
             foreach ($notified_content as $key => $notified) {
                 $document = DocumentRequirementEnum::getSingleValue($notified['element']);
                 $web_content .= "Document: ". $document;
@@ -180,34 +233,5 @@ class CandidateStatusNotificationAction
         }
 
         // Notification must be developed
-    }
-
-
-
-    public function updateVisaStatus($processIds, $visaType="Proceed")
-    {
-        // Notification must be developed
-    }
-
-
-    public function updateLabourPermitStatus($labourPermitIds)
-    {
-
-    }
-
-    public function updateEVisaStatus($eVisaIds)
-    {
-
-    }
-
-
-    public function updateETicketStatus($eTicketIds)
-    {
-
-    }
-
-    public function updateCancelledNotification(CompanyCandidate $companyCandidate)
-    {
-        
     }
 }

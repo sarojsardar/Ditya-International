@@ -123,8 +123,8 @@
                       </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary">Move Now</button>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Move Now</button>
                     </div>
                 </div>    
             </form>

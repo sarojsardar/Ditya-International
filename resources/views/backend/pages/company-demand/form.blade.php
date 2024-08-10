@@ -73,14 +73,15 @@ Company Demand Entry | {{ config('app.name') }}
                             <div class="col-lg-6 mb-4">
                                 <div class="form-group">
                                     <label for="">Gender<span style="color: rgb(241, 69, 69)">*</span></label>
-
+                                 
                                     <select name="gender" class="form-control select2-options" id="company-options">
                                         <option value="">== Choose Gender ==</option>
                                         @foreach($genders as $gender)
                                         <option value="{{$gender->name}}" @if($gender->name == $demand->gender) selected
                                             @endif>{{$gender->name}}</option>
                                         @endforeach
-                                        <option value="both"> Both</option>
+                                        <option value="both" @if($demand->gender == "both") selected
+                                            @endif> Both</option>
 
                                     </select>
 

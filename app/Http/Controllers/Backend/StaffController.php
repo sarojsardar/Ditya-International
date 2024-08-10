@@ -24,7 +24,7 @@ class StaffController extends Controller
 
     public function index(Request $request){
 
-        $staffs = User::where('id', '!=', auth('web')->id())->where('user_type', UserTypes::NORMAL)->get();
+        $staffs = User::where('id', '!=', auth('web')->id())->whereIn('user_type', [UserTypes::NORMAL, UserTypes::DOCUMENT_OFFICER, UserTypes::MEDICAL_OFFICER])->get();
 
         if($request->ajax()){
 
@@ -39,16 +39,16 @@ class StaffController extends Controller
                     return "<img src='{$url}' alt='staff profile' style='width: 80px; height: 80px; border-radius: 50%; object-fit: contain;'>";
                 }            })
             ->addColumn('fullname', function($row){
-                return $row->userInfo->first_name.' '.$row->userInfo->middle_name.' '.$row->userInfo->last_name;
+                return $row?->userInfo?->first_name.' '.$row?->userInfo?->middle_name.' '.$row?->userInfo?->last_name;
             })
             ->addColumn('contact', function($row){
-                return $row->userInfo->contact;
+                return $row?->userInfo?->contact;
             })
             ->addColumn('address', function($row){
-                return $row->userInfo->full_address;
+                return $row?->userInfo?->full_address;
             })
             ->addColumn('role', function($row){
-                return "<strong>{$row->roles[0]->name }</strong>";
+                return "<strong>{$row?->roles[0]?->name }</strong>";
             })
             ->addColumn('created_at', function($row){
                 return Carbon::parse($row->created_at)->format('Y , d M | g:i A');
@@ -99,7 +99,7 @@ class StaffController extends Controller
             'full_address' => 'required',
             'role' => 'required',
             'profile_picture' => 'sometimes|file|mimes:jpg,jpeg,png,bmp,tiff|max:4096', // 'sometimes' conditionally validates the field
-            'user_type' => 'required',
+            'user_type' => 'nullable',
             'medical' => 'required_if:role,4',
         ], [
             'medical.required_if' => 'The medical field is required if the assigned role is Medical Officer.',
@@ -116,7 +116,7 @@ class StaffController extends Controller
             $newStaff = User::create([
                 'username' => strtolower($request->first_name) . str_pad(mt_rand(1,9999), 4, '0', STR_PAD_LEFT),
                 'email' => $request->email,
-                'user_type' => $request->user_type,
+                'user_type' => $request->user_type ?? 1,
                 'password' => Hash::make('nepal123'),
                 'status' => UserStatus::Active,
             ]);
@@ -166,7 +166,7 @@ class StaffController extends Controller
             'full_address' => 'required',
             'role' => 'required',
             'profile_picture' => 'sometimes|mimes:jpg,jpeg,png,bmp,tiff|max:4096',
-            'user_type' => 'required',
+            'user_type' => 'nullable',
             'medical' => 'required_if:role,4',
         ], [
             'medical.required_if' => 'The medical field is required if the assigned role is Medical Officer.',

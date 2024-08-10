@@ -250,12 +250,14 @@ class UserController extends Controller
                 EducationalDocument::updateOrCreate(
                     [
                         'user_id' => $userId,
+                    ],
+                    [ 
                         'level' => $request->level,
                         'edu_level' => $educationType->edu_level,
                         'school_college_name' => $request->school_college_name,
                         'pass_year' => $request->pass_year,
-                    ],
-                    ['edu_doc' => $eduDocPath]
+                        'edu_doc' => $eduDocPath
+                    ]
                 );
             }
         }else{
@@ -264,12 +266,14 @@ class UserController extends Controller
             EducationalDocument::updateOrCreate(
                 [
                     'user_id' => $userId,
+                ],
+                [ 
                     'level' => $request->level,
                     'edu_level' => $educationType->edu_level,
                     'school_college_name' => $request->school_college_name,
                     'pass_year' => $request->pass_year,
-                ],
-                ['edu_doc' => $eduDocPath]
+                    'edu_doc' => $eduDocPath
+                ]
             );
         }
         return response()->json(['status' => true, 'message' => 'Educational detail updated successfully']);

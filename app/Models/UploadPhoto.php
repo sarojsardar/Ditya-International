@@ -9,7 +9,7 @@ class UploadPhoto extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'passport_photo', 'full_photo'];
+    protected $guarded = [];
 
     public function user()
     {

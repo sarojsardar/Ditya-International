@@ -171,7 +171,7 @@
                                 <div class="col-lg-12">
                                     <div class="form-group">
                                         <label for="">Full Address <span style="color: rgb(241, 69, 69)">*</span></label>
-                                        <input type="text" name="full_address" class="form-control" value="{{ old('full_addresss', @$staff->userInfo->full_address) }}">
+                                        <input type="text" name="full_address" class="form-control" value="{{ old('full_address', @$staff->userInfo->full_address) }}">
                                         @if($errors->has('full_address'))
                                             <ul class="parsley-errors-list filled"><li class="parsley-required text-danger">{{ $errors->first('full_address') }}</li></ul>
                                         @endif

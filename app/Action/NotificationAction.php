@@ -2,6 +2,8 @@
 namespace App\Action;
 
 use App\Enum\NotificationSendEnum;
+use App\Jobs\SendEmailJob;
+use App\Jobs\SendSmsJob;
 use App\Models\Notification\Notification;
 use Illuminate\Support\Facades\Log;
 
@@ -49,19 +51,33 @@ class NotificationAction
     }
     private function pushToSms()
     {
-        if((int)$this->send_to == NotificationSendEnum::SMS){
-
+        if((int)$this->send_to == NotificationSendEnum::SMS || (int)$this->send_to == NotificationSendEnum::ALL){
+            if($this->generated_to !== "System"){
+                $receiver = $this->generated_to::where('id', $this->generated_by)->first();
+                if($receiver){
+                    if($receiver->mobile_no){
+                        SendSmsJob::dispatch($this->mobile_content, $receiver->mobile_no);
+                    }
+                }
+            }
         }
     }
     private function pushToEmail()
     {
-        if((int)$this->send_to == NotificationSendEnum::EMIAL){
-
+        if((int)$this->send_to == NotificationSendEnum::EMIAL ||  (int)$this->send_to == NotificationSendEnum::ALL){
+            if($this->generated_to !== "System"){
+                $receiver = $this->generated_to::where('id', $this->generated_by)->first();
+                if($receiver){
+                    if($receiver->email){
+                        SendEmailJob::dispatch($this->mobile_content, $receiver->email, $this->title);
+                    }
+                }
+            }
         }
     }
     private function pushToSystem()
     {
-        if((int)$this->send_to == NotificationSendEnum::SYSTEM){
+        if((int)$this->send_to == NotificationSendEnum::SYSTEM || (int)$this->send_to == NotificationSendEnum::ALL){
             
         }
     }

@@ -33,7 +33,7 @@ class StaffData{
 
         $staff->update([
             'email' => $this->request->email,
-            'user_type' => $this->request->user_type,
+            'user_type' => $this->request->user_type ?? 1,
         ]);
 
         $file = $this->request->file('profile_picture');

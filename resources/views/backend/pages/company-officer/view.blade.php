@@ -95,19 +95,6 @@
 
                                     </ul>
                                 </div>
-
-                                {{-- @if(!@$visaProcess) --}}
-                                    <div class="button-group" style="flex-shrink: 0;"> <!-- Ensure the buttons don't shrink -->
-                                        <a href="#" id="document-status" title='Info' class="me-2"> <!-- Add me-2 for spacing -->
-                                            <button class='btn btn-sm btn-primary'><i class='fas fa-info'></i>Document Status</button>
-                                        </a>
-
-                                        <a href="#" id="notify-user" title='Info' class="me-2"> <!-- Add me-2 for spacing -->
-                                            <button class='btn btn-sm btn-info'><i class='fas fa-info'></i>Notify Candidate</button>
-                                        </a>
-                                    </div>
-                                {{-- @endif --}}
-
                             </div>
                         </div>
                     </div>
@@ -379,119 +366,57 @@
             </div>
         </div>
 
-        @if($visaProcess->status == "Successed")
-        <div class="card mt-5">
-            <h5 class="card-header">Visa</h5>
-            <div class="container">
-                <iframe src="{{$visaProcess->visa}}" frameborder="0"></iframe>
+       
+
+        @if ($visaProcess?->status == 'Successed')
+            <div class="card mt-5">
+                <h5 class="card-header">Visa</h5>
+                <div class="container">
+                    <embed src="{{ $visaProcess?->visa }}#toolbar=0" width="100%" height="500px" />
+                </div>
             </div>
-        </div>
+        @endif
+        @if ($visaProcess?->status == 'Rejected')
+            <div class="card mt-5">
+                <h5 class="card-header">Visa</h5>
+                <div class="container">
+                    <p>
+                        {{ $visaProcess?->reason }}
+                    </p>
+                </div>
+            </div>
+        @endif
+
+
+        @if (@$labourPermit?->status == 'Successed')
+            <div class="card mt-5">
+                <h5 class="card-header">Labour Permit</h5>
+                <div class="container">
+                    <embed src="{{ @$labourPermit?->permit }}#toolbar=0" width="100%" height="500px" />
+                </div>
+            </div>
+        @endif
+
+
+        @if (@$evisa?->status == 'Successed')
+            <div class="card mt-5">
+                <h5 class="card-header">E Visa</h5>
+                <div class="container">
+                    <embed src="{{ $evisa?->visa }}#toolbar=0" width="100%" height="500px" />
+                </div>
+            </div>
         @endif
 
 
 
         
-        @if($visaProcess->status == "Rejected")
-        <div class="card mt-5">
-            <h5 class="card-header">Visa</h5>
-            <div class="container">
-                <p>
-                    {{$visaProcess->reason}}
-                </p>
-            </div>
-        </div>
-        @endif
+        
 
         <!--/ User Profile Content -->
         <!-- Lightbox Container -->
         <div id="myLightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.75);text-align:center;z-index:9999;">
             <span id="closeLightbox" style="position:absolute;top:20px;right:30px;font-size:40px;cursor:pointer;color:#fff;">&times;</span>
             <img id="lightboxImage" style="max-width:80%;margin-top:60px;">
-        </div>
-    </div>
-
-
-    <div class="modal fade" id="changeDocumentStatus" tabindex="-1" role="dialog" aria-labelledby="changeDocumentStatusLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <form action="{{route('document-officer.document-status', $companyCandidate->id)}}" method="post" id="status-form">
-                @csrf
-                @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="changeDocumentStatusLabel">Change Document Status</h5>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="">Status:</label>
-                            <select name="status" id="status" class="form-control">
-                                <option value="Completed">Completed</option>
-                                <option value="In Progress">In Progress</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary">Change Status</button>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </div>    
-            </form>
-        </div>
-    </div>
-
-
-    <div class="modal fade" id="notify-userModal" tabindex="-1" role="dialog" aria-labelledby="notify-userModalStatusLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <form action="{{route('document-officer.notify-user', $companyCandidate->id)}}" method="post" id="status-form">
-                @csrf
-                @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="notify-userModalStatusLabel">Notify User</h5>
-                    </div>
-                    <div class="modal-body">
-                        <h5>Select The Required Document to Be Update</h5>
-                        <ul class="list-gourp">
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="1"><span class="ms-2">Profile Picture</span>
-                                <textarea name="reasons[1]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="2"><span class="ms-2">PP size Photo</span>
-                                <textarea name="reasons[2]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="3"><span class="ms-2">Passport</span>
-                                <textarea name="reasons[3]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="4"><span class="ms-2">Full size Photo</span>
-                                <textarea name="reasons[4]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="5"><span class="ms-2">Educational Document</span>
-                                <textarea name="reasons[5]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="6"><span class="ms-2">Resume</span>
-                                <textarea name="reasons[6]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-
-                            <li class="list-group-item">
-                                <input type="checkbox" name="element_ids[]" class="element-checkbox" value="7"><span class="ms-2">Additional Document</span>
-                                <textarea name="reasons[7]" rows="3" class="form-control reason-area d-none">This is Blur Or Not Uploaded Or Not In Mentioned size</textarea>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Notify User</button>
-                        <button class="btn btn-danger" type="button" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </div>    
-            </form>
         </div>
     </div>
 

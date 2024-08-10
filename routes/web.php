@@ -117,11 +117,6 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     });
     
 
-
-
-
-
-
     // new edited for the finalized
 
     Route::group(['prefix'=>'company'], function(){

@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers\Company;
 
-use App\Action\CandidateStatusNotificationAction;
-use App\Action\FileSupportAction;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Enum\UserTypes;
 use App\Models\Company;
 use App\Models\Language;
+use App\Models\Interview;
 use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
 use App\Models\EducationType;
-use App\Models\CompanyCandidate;
-use App\Http\Controllers\Controller;
-use App\Models\Candidat\MedicalCheckup;
-use App\Data\Datatables\CompanyAccessApidata;
 use App\Enum\CandiateAccessEnum;
-use App\Models\Candidate\DocumentProcess;
-use App\Models\Candidate\EVisaProcess;
-use App\Models\Candidate\VisaProcess;
-use App\Models\Interview;
-use Carbon\Carbon;
+use App\Models\CompanyCandidate;
+use App\Action\FileSupportAction;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\Candidate\VisaProcess;
+use App\Models\Candidate\EVisaProcess;
+use App\Models\Candidate\LabourPermit;
+use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\ETicketProcess;
+use App\Models\Candidate\DocumentProcess;
 use Illuminate\Support\Facades\Validator;
+use App\Data\Datatables\CompanyAccessApidata;
+use App\Action\CandidateStatusNotificationAction;
 
 class CompanyAccessController extends Controller
 {
@@ -46,12 +48,12 @@ class CompanyAccessController extends Controller
         $medicals = auth()->user()->medicals;
         $companies = Company::orderBy('name')->get();
         if($request->ajax()){
-            return (new CompanyAccessApidata($request))->getInCandidates();
+            return (new CompanyAccessApidata($request))->getInCandidates($request->type);
         }
 
         $company = Company::where('user_id', auth()->user()->id)->latest()->first();
         $demands = CompanyDemand::where('company_id', $company->user_id)->orderBy('demand_code')->get();
-        return view('backend.pages.company-officer.in-check', ['companies'=>$companies, 'demands'=>$demands]);
+        return view('backend.pages.company-officer.in-check', ['companies'=>$companies, 'demands'=>$demands, 'type'=>CandiateAccessEnum::VISA_CALLING]);
     }
 
     public function showDetails($companyCandidateId)
@@ -89,6 +91,27 @@ class CompanyAccessController extends Controller
             'demand_id'=>$companyCandidate->demand_id,
             'user_id'=>$userDetails->id,
         ])->latest()->first();
+
+
+        $labourPermit = LabourPermit::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+        $evisa = EVisaProcess::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+        $eticket = ETicketProcess::where([
+            'user_id'=>$companyCandidate->user_id,
+            'company_id'=>$companyCandidate->company_id,
+            'demand_id'=>$companyCandidate->demand_id,
+        ])->first();
+
+        
         // Check if the user was found
         // Find the company candidate by user ID
         $educationTypes = EducationType::all();
@@ -108,6 +131,11 @@ class CompanyAccessController extends Controller
             'medicalCheckup'=>$medicalCheckup,
             'interview'=>$interview,
             'visaProcess'=>$visaProcess,
+
+
+            'labourPermit'=>@$labourPermit,
+            'evisa'=>@$evisa,
+            'eticket'=>@$eticket,
         ]);
     }
     public function updateDocumentStatus(Request $request, $companyCandidateId)
@@ -209,7 +237,7 @@ class CompanyAccessController extends Controller
         $medicals = auth()->user()->medicals;
         $companies = Company::orderBy('name')->get();
         if($request->ajax()){
-            return (new CompanyAccessApidata($request))->getInCandidates();
+            return (new CompanyAccessApidata($request))->getInCandidates($request->type);
         }
 
         $company = Company::where('user_id', auth()->user()->id)->latest()->first();

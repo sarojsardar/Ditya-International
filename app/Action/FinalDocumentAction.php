@@ -29,11 +29,13 @@ class FinalDocumentAction
                 $companyCandidate = CompanyCandidate::where('id', $candidateId)->first();
                 $companyDemand = CompanyDemand::where('id', $companyCandidate->demand_id)->first();
                 if($companyCandidate){
-                    $labourPermit = LabourPermit::create([
+                    $labourPermit = LabourPermit::updateOrCreate([
                         'user_id'=>$companyCandidate->user_id,
                         'company_id'=>$companyCandidate?->company_id,
                         'demand_id'=>$companyDemand?->id,
                         'demand_code'=>$companyDemand?->demand_code,
+                    ], 
+                    [
                         'status'=>"Successed",
                         'reason'=>null,
                         'permit'=>$file,
@@ -46,8 +48,6 @@ class FinalDocumentAction
         }
 
 
-
-
         if($this->request->has('e_visa')){
             $file = $fileSupport->uploadFile($this->request->e_visa, 'candidate/document');
             $evisaIds = [];
@@ -55,11 +55,12 @@ class FinalDocumentAction
                 $companyCandidate = CompanyCandidate::where('id', $candidateId)->first();
                 $companyDemand = CompanyDemand::where('id', $companyCandidate->demand_id)->first();
                 if($companyCandidate){
-                    $evisa = EVisaProcess::create([
+                    $evisa = EVisaProcess::updateOrCreate([
                         'user_id'=>$companyCandidate->user_id,
                         'company_id'=>$companyCandidate?->company_id,
                         'demand_id'=>$companyDemand?->id,
                         'demand_code'=>$companyDemand?->demand_code,
+                    ], [
                         'status'=>"Successed",
                         'reason'=>null,
                         'visa'=>$file,
@@ -80,11 +81,13 @@ class FinalDocumentAction
                 $companyCandidate = CompanyCandidate::where('id', $candidateId)->first();
                 $companyDemand = CompanyDemand::where('id', $companyCandidate->demand_id)->first();
                 if($companyCandidate){
-                    $eticket = ETicketProcess::create([
+                    $eticket = ETicketProcess::updateOrCreate([
                         'user_id'=>$companyCandidate->user_id,
                         'company_id'=>$companyCandidate?->company_id,
                         'demand_id'=>$companyDemand?->id,
                         'demand_code'=>$companyDemand?->demand_code,
+                    ], 
+                    [
                         'status'=>"Successed",
                         'reason'=>null,
                         'departure_date'=>Carbon::parse($this->request->departure_date),

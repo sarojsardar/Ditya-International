@@ -431,7 +431,6 @@
                                     <label for="">Status</label>
                                     <select name="demand_status" id="statusDropdown" class="form-control">
                                         <option value="Approved">Approved</option>
-                                        <option value="Pending">Pending</option>
                                         <option value="Rejected">Rejected</option>
                                     </select>
                                 </div>
@@ -443,7 +442,7 @@
                                     <label for="">Status</label>
                                     <select name="interview_status" id="statusDropdown" class="form-control">
                                         <option value="Selected" @if($userDetails->interview_status == 'Selected') selected @endif>Selected</option>
-                                        @if($actualCandidate->interview_status !== "Selected")
+                                        @if($actualCandidate->interivew_status !== "Selected")
                                             <option value="UnSelected">UnSelected</option>
                                             <option value="KIV" >KIV</option>
                                         @endif

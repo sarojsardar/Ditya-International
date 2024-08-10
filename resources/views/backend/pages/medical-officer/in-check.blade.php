@@ -113,11 +113,9 @@
         </div>
     </div>
 
-
-
     <div class="modal fade" id="update-medical-status" tabindex="-1" role="dialog" aria-labelledby="update-medical-statusLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form action="#" method="post" id="status-form">
+            <form action="#" method="post" id="status-form" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
                 <div class="modal-content">
@@ -129,12 +127,12 @@
                         <input type="hidden" id="status-input" name="status">
                         <div class="form-group">
                             <label for="">Report file</label>
-                            <input type="file" class="form-control">
+                            <input type="file" class="form-control" name="report[]" multiple>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary">Change Status</button>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Change Status</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>    
             </form>

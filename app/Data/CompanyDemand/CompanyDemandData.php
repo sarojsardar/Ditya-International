@@ -110,24 +110,22 @@ class CompanyDemandData{
         }
 
         $usedQuota = $demand->quota_value - $demand->remaining_quota;
-
         $educationType = EducationType::where('name', $this->request->education)->first();
         $demand->update([
             'demand_letter' => $demandLetters,
-            'office_rate' => $this->request->office_rate,
             'quota' => $this->request->quota,
-            'quota_value' => $this->request->quota_value,
-            'remaining_quota' => $this->request->quota_value - $usedQuota,
-            
+            'gender' => $this->request->gender,
             'age_from' => $this->request->age_from,
             'age_to' => $this->request->age_to,
             'height' => $this->request->height,
             'weight' => $this->request->weight,
-            'experience_year' => $this->request->experience_year ?? 0,
-            'education' => $this->request->education ?? '',
+            'experience_year' => $this->request->experience_year,
+            'education' => $this->request->education,
             'edu_level' => $educationType?->edu_level ?? 0,
-
         ]);
+        
+        $languageIds = $this->request->languages;
+        $demand->languages()->sync($languageIds);
 
 
         // if($demand->quota_value == $demand->remaining_quota){
