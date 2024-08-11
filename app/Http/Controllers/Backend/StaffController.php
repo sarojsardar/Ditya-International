@@ -77,14 +77,15 @@ class StaffController extends Controller
         return view('backend.pages.staffs.form', compact('roles', 'staff', 'medicals', 'userTypes'));
     }
 
-
     public function edit($staffId){
         $staff = User::find($staffId);
         if(!$staff){
             return redirect()->route('staff.index')->with('error', 'Record not found');
         }
+        $userTypes = UserTypes::getAllValues();
         $roles = (new RoleData(null))->getAllRoles();
-        return view('backend.pages.staffs.form', compact('roles', 'staff'));
+        $medicals = Medical::orderBy('name', 'ASC')->get();
+        return view('backend.pages.staffs.form', compact('roles', 'staff', 'userTypes', 'medicals'));
     }
 
 

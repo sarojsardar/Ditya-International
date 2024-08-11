@@ -30,7 +30,7 @@ class UserController extends Controller
             'father_name' => 'required|string|max:255',
             'mother_name' => 'required|string|max:255',
             'marital_status' => 'required|string',
-            'spouse_name' => 'nullable|string|max:255|required_if:marital_status,Married,Unmarried',
+            'spouse_name' => 'nullable',
             'gender' => 'required|string|in:male,female',
             'height' => 'required|numeric',
             'weight' => 'required|numeric',
@@ -397,6 +397,20 @@ class UserController extends Controller
 
 
         return response()->json(['status' => true, 'message' => 'Bank Details Updated Successfully']);
+
+    }
+
+
+
+
+    public function getProfile()
+    {
+        $user = auth()->user();
+
+    }
+
+    public function updateProfile(Request $request)
+    {
 
     }
 }

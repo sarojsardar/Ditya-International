@@ -490,12 +490,24 @@ class CompanyDemandController extends Controller
                 'company_id' => $company_id,
                 'demand_id' => $request->demand_id,
             ])->first();
-
             // dd($companyCandidate);
-
             if($companyCandidate){
                 if($request->has('interview_status')){
                     $companyCandidate->interview_status = $request->interview_status;
+
+                    $interview = Interview::where([
+                        'demand_id'=>$companyCandidate->demand_id,
+                        'user_id'=>$companyCandidate->user_id,
+                    ])->latest()->first();
+
+                    if($interview){
+                        $interview->is_taken = true;
+                        if($request->interview_status == "Selected"){
+                            $interview->is_selected = true;
+                        }
+                        $interview->save();
+                    }
+        
                 }
                 if($request->has('demand_status')){
                     $companyCandidate->demand_status = $request->demand_status;

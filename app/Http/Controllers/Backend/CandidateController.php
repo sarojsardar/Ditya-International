@@ -487,9 +487,6 @@ class CandidateController extends Controller
         $requiredCategoryIds = DB::table('category_company')->where('user_id', $userId)->pluck('category_id')->toArray();
         
         $filteredUsers = $demands->filter(function ($user) use ($languageIds, $requiredCategoryIds) {
-
-            dd($user);
-
             $userLanguageIds = $user->manyLanguages->pluck('id')->all();
 
             $userCategoryIds = DB::table('category_details')

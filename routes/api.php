@@ -117,14 +117,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/checkAllStep', [CheckStepController::class, 'checkAllDetailsFilled']);
 
 
-
-
-
     // Inverview Controller
-    Route::get('/selectedByCompany', [InterviewController::class, 'selectedByCompany']);
+    Route::get('/interview-list', [InterviewController::class, 'interviews']);
 
+    Route::get('application-process', [InterviewController::class, 'applicationProcess']);
+    Route::get('/interview-process/{id}', [InterviewController::class, 'interviewProcess']);
     Route::get('/interviewInvites', [InterviewController::class, 'interviewInvites']);
-
     Route::post('/interviewStatus/{interviewId}', [InterviewController::class, 'updateStatus'])->name('changeStatus');
     
     // for the candidate notification
@@ -139,4 +137,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{process_id}', [DocumentProcessController::class, 'uploadDocument']);
         });
     });
+
+
+
+    // New Added for the profile
+    Route::get('/profile', [UserController::class, 'getProfile']);
+    Route::post('/profile', [UserController::class, 'updateProfile'])
 });

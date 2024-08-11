@@ -109,6 +109,7 @@ class NeededTableSeeder extends Seeder
             'password' => Hash::make('password'),
             'mobile_no' => '',
             'status' => 1,
+            'user_type'=>UserTypes::MEDICAL_OFFICER,
 
         ]);
         $user->syncRoles(['Medical-Officer']);
@@ -180,6 +181,7 @@ class NeededTableSeeder extends Seeder
                 'status'=>1,
                 'demand_status'=>'New',
                 'reference_id'=>null,
+                'user_type'=>UserTypes::CANDIDATE
             ];
             $user = User::create($candidateUserData);
 

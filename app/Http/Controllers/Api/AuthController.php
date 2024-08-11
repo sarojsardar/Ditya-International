@@ -23,7 +23,7 @@ class AuthController extends Controller
 
         // Generate the OTP code
         $code = mt_rand(1000, 9999);
-
+        
         // Store or update the code and timestamp in the database
         DB::table('password_resets')->updateOrInsert(
             ['mobile_no' => $request->mobile_no],
@@ -44,7 +44,8 @@ class AuthController extends Controller
         $request->validate([
             'mobile_no' => 'required|numeric',
             'token' => 'required',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|min:8|same:confirm_password',
+            'confirm_password' => 'required|same:password',
         ]);
 
         $passwordResetEntry = DB::table('password_resets')

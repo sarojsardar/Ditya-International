@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Company;
+use App\Models\Country;
 use App\Models\Interview;
 use Illuminate\Http\Request;
 use App\Models\CompanyDemand;
@@ -14,40 +15,65 @@ use App\Enum\UserInterviewStatus;
 use App\Action\NotificationAction;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Candidate\VisaProcess;
+use App\Models\Candidate\EVisaProcess;
+use App\Models\Candidate\LabourPermit;
 use App\Http\Resources\CompanyResource;
+use App\Models\Candidat\MedicalCheckup;
+use App\Models\Candidate\ETicketProcess;
+use App\Models\Candidate\DocumentProcess;
+use App\Models\Candidate\FinalJobstatus;
 
 class InterviewController extends Controller
 {
     //
-    public function selectedByCompany()
+    public function interviews(Request $request)
     {
         // Retrieve the authenticated user's ID
         $userID = auth()->id();
+        $interviews = CompanyCandidate::query()
+        ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
+        ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
+        ->leftJoin('users as candidates', 'candidates.id', '=', 'company_candidates.user_id')
+        ->leftJoin('companies', 'companies.id', '=', 'company_candidates.company_id')
+        ->leftJoin('interviews', function ($join) {
+            $join->on('interviews.user_id', '=', 'candidates.id')
+                ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->where('company_candidates.user_id', $userID)
+        
+        ->when($request->type, function($query, $type) {
+            if($type == "attend"){
+                $query->where('interviews.is_taken', true);
+            }
+            if($type == "selected"){
+                $query->where('interviews.is_taken', true)
+                ->where('interviews.user_accept_status', 'Accepted')      
+                ->where('interviews.is_selected', true);
+            }
+            if($type == "rejected"){
+                $query->where('interviews.is_taken', true)
+                ->where('interviews.user_accept_status', 'Accepted')      
+                ->where('interviews.is_selected', false);
+            }
+        })   
+        ->select([
+            'company_candidates.*',
+            'company_candidates.id as caompany_candidate_id',
+            'interviews.*',
+            'interviews.id as interview_id',
+            'companies.name as company_name',
+            'companies.address as company_address',
+            'companies.logo as company_logo',
+            'companies.country as company_country',
+            'company_user.id as company_user_id',
+        ])
+        ->get();
 
-
-        // Retrieving all CompanyCandidate records associated with the authenticated user's ID
-        $companyCandidates = CompanyCandidate::where('user_id', $userID)
-            ->with('company')
-            ->where('demand_status', UserDemandStatus::Approved)
-            ->get(); // Retrieve all matching CompanyCandidate records
-
-
-        if (!$companyCandidates) {
-            // If the user is not approved, return count as 0
-            return response()->json([
-                'success' => true,
-                'companyCount' => 0,
-            ]);
-        }
-
-
-        // Count the number of CompanyCandidate records
-        $count = $companyCandidates->count();
-
-        // Return the count in a JSON response
         return response()->json([
             'success' => true,
-            'companyCount' => $count,
+            'message'=>'Selected Interview List',
+            'data' => $interviews,
         ]);
     }
 
@@ -198,9 +224,409 @@ class InterviewController extends Controller
     }
 
 
+    public function interviewProcess(Request $request, $id)
+    {
+        $user = auth()->user();
+        $interview = Interview::where('user_id', $user->id)->where('id', $id)->first();
+        if(!$interview){
+            return response()->json([
+                'success'=>false,
+                'message'=>"Not Found",
+                'data'=>[],
+            ], 400);
+        }
+        $companyCandidates = CompanyCandidate::query()
+        ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
+        ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
+        ->leftJoin('companies', 'companies.id', '=', 'company_candidates.company_id')
+        ->leftJoin('users as candidates', 'candidates.id', '=', 'company_candidates.user_id')
+        ->leftJoin('user_details as candidate_details', 'candidate_details.user_id', '=', 'candidates.id')
+        ->leftJoin('user_information as candidate_information', 'candidate_information.user_id', '=', 'candidates.id')
+        ->leftJoin('upload_photos', 'candidates.id', '=', 'upload_photos.user_id')
+
+        ->leftJoin('interviews', function ($join) {
+            $join->on('interviews.user_id', '=', 'candidates.id')
+                ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+
+        ->leftJoin('medical_checkups', function ($join) {
+            $join->on('medical_checkups.user_id', '=', 'candidates.id')
+                ->on('medical_checkups.company_id', '=', 'company_candidates.company_id')
+                ->on('medical_checkups.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->leftJoin('document_processes', function ($join) {
+            $join->on('document_processes.user_id', '=', 'candidates.id')
+                ->on('document_processes.company_id', '=', 'company_candidates.company_id')
+                ->on('document_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->leftJoin('visa_processes', function ($join) {
+            $join->on('visa_processes.user_id', '=', 'candidates.id')
+                ->on('visa_processes.company_id', '=', 'company_candidates.company_id')
+                ->on('visa_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->leftJoin('evisa_processes', function ($join) {
+            $join->on('evisa_processes.user_id', '=', 'candidates.id')
+                 ->on('evisa_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('evisa_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('eticket_processes', function ($join) {
+            $join->on('eticket_processes.user_id', '=', 'candidates.id')
+                 ->on('eticket_processes.company_id', '=', 'company_candidates.company_id')
+                 ->on('eticket_processes.demand_id', '=', 'company_candidates.demand_id');
+        })
+
+        ->leftJoin('labour_permits', function ($join) {
+            $join->on('labour_permits.user_id', '=', 'candidates.id')
+                 ->on('labour_permits.company_id', '=', 'company_candidates.company_id')
+                 ->on('labour_permits.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->leftJoin('final_jobstatuses', function ($join) {
+            $join->on('final_jobstatuses.user_id', '=', 'candidates.id')
+                 ->on('final_jobstatuses.company_id', '=', 'company_candidates.company_id')
+                 ->on('final_jobstatuses.demand_id', '=', 'company_candidates.demand_id');
+        })->where('company_candidates.user_id', $user->id)
+        ->where('interviews.id', $interview->id);
+
+        $companyCandidates->select([
+            'company_candidates.*',
+
+            'companies.name as company_name',
+            'companies.address as company_address',
+            'companies.logo as company_logo',
+            'companies.country as company_country',
+            'company_user.id as company_user_id',
+
+            'candidates.id as candidate_id',
+            'candidates.email as candidate_email',
+
+            'candidate_details.full_name as candidate_full_name',
+            'candidate_details.permanent_address as candidate_permanent_address',
+            'candidate_details.temporary_address as candidate_temporary_address',
+            'candidate_details.gender as candidate_gender',
+            'candidates.mobile_no as candidate_contact',
+
+            'candidate_information.first_name as candidate_first_name',
+            'candidate_information.last_name as candidate_last_name',
+            'candidate_information.middle_name as middle_name',
+            'candidate_information.full_address as candidate_full_address',
+            'upload_photos.passport_photo as candidate_profile_picture',
+
+            'medical_checkups.medical_id',
+            'medical_checkups.checkup_date',
+            'medical_checkups.status as checkup_medical_status',
+            'medical_checkups.is_tested',
+            
+            'document_processes.status as document_status',
+            'visa_processes.status as visa_status',
+            'evisa_processes.status as evisa_status',
+
+            'eticket_processes.status as eticket_status',
+            'labour_permits.status as labour_permit_status',
+            'final_jobstatuses.status as job_status',
+            // new developed
+            'candidates.demand_status as user_demand_status',
+            'interviews.*',
+        ])->distinct()->first();
+
+        return response()->json([
+            'success'=>false,
+            'message'=>"Not Found",
+            'data'=>$companyCandidates,
+        ], 400);
+    }
+    
+    public function applicationProcess(Request $request)
+    {
+       $user = auth()->user();
+       $companyCandidate =  $companyCandidates = CompanyCandidate::query()
+       ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
+       ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
+       ->leftJoin('companies', 'companies.id', '=', 'company_candidates.company_id')
+       ->leftJoin('users as candidates', 'candidates.id', '=', 'company_candidates.user_id')
+       ->leftJoin('user_details as candidate_details', 'candidate_details.user_id', '=', 'candidates.id')
+       ->leftJoin('user_information as candidate_information', 'candidate_information.user_id', '=', 'candidates.id')
+       ->leftJoin('upload_photos', 'candidates.id', '=', 'upload_photos.user_id')
+       ->where('company_candidates.user_id', $user->id)
+       ->orderBy('id', 'desc')
+       ->select([
+        'company_candidates.*',
+        'companies.name as company_name',
+        'companies.address as company_address',
+        'companies.logo as company_logo',
+        'companies.country as company_country',
+        'company_user.id as company_user_id',
+
+        'candidates.id as candidate_id',
+        'candidates.email as candidate_email',
+
+        'demand_code',
+        'company_demands.gender as demand_gender',
+        'age_from',
+        'age_to',
+        'company_demands.height as demand_height',
+        'company_demands.weight as demand_weight',
+        'experience_year',
+        'education',
+        'edu_level',
+        'demand_letter',
+        'company_demands.status as demand_status',
+       ])->get();
+
+
+      $processes =[];
+       foreach ($companyCandidate as $key => $candidate) {
+        $process = [];
+        $process = [
+            'company_info'=>[
+                'id'=>$candidate->company_id,
+                'company_name'=>$candidate->company_name,
+                'company_logo'=>$candidate->company_logo,
+                'company_address'=>$candidate->company_address,
+                'company_country'=>Country::where('id', $candidate->company_country)->first()?->name,
+            ],
+            'demand_info'=>[
+                'demand_code'=>$candidate->demand_code,
+                'gender'=>$candidate->demand_gender,
+                'age_from'=>$candidate->age_from,
+                'age_to'=>$candidate->age_to,
+                'height'=>$candidate->demand_height,
+                'weight'=>$candidate->demand_weight,
+                'experience_year'=>$candidate->experience_year,
+                'education'=>$candidate->education,
+                'edu_level'=>$candidate->edu_level,
+                'demand_letter'=>$candidate->demand_letter,
+                'demand_status'=>$candidate->demand_status,
+            ],
+        ];
+            $steps = [];
+            $steps[] = [
+                'step'=>1,
+                'message'=>'Wishlisted',
+                'data'=>[],
+            ];
+
+
+            $interview = Interview::where([
+                'demand_id'=>$candidate->demand_id,
+                'user_id'=>$user->id,
+            ])->latest()->first();
+
+            if($interview){
+                $steps[] = [
+                    'step'=>2,
+                    'message'=>'Interview Scheduled',
+                    'data'=>$interview,
+                ];
+            }
+
+            if($interview){
+                if($interview->user_accept_status == "Accepted" || $interview->user_accept_status=="Declined"){
+                    $steps[] = [
+                        'step'=>3,
+                        'message'=>'Interview '.$interview->user_accept_status .' By You',
+                        'data'=>$interview,
+                    ];
+                }
+            }
+
+            if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                $steps[] = [
+                    'step'=>4,
+                    'message'=>'Interview Attended',
+                    'data'=>$interview,
+                ];
+            }
+
+
+            if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                $message = "Rejected";
+                if((bool)$interview->is_selected){
+                    $steps[] = [
+                        'step'=>5,
+                        'message'=>'Selected',
+                        'data'=>$interview,
+                    ];
+                }
+            }
+
+
+            $medicalCheckup = MedicalCheckup::where([
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+                'user_id'=>$user->id,
+            ])->latest()->first();
+
+            if($medicalCheckup){
+                $steps[] = [
+                    'step'=>6,
+                    'message'=>'Medical Checkup Scheduled',
+                    'data'=>$medicalCheckup,
+                ];
+            }
+
+
+            if($medicalCheckup){
+                if((bool)$medicalCheckup->is_tested){
+                    $steps[] = [
+                        'step'=>7,
+                        'message'=>'Medical Checkup Done',
+                        'data'=>$medicalCheckup,
+                    ];
+                }
+            }
+
+
+            $documentProcess = DocumentProcess::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
+
+            if($documentProcess){
+                $steps[] = [
+                    'step'=>8,
+                    'message'=>'Document Process Started',
+                    'data'=>$documentProcess,
+                ];
+            }
+
+
+            if($documentProcess){
+                if($documentProcess->status == "Completed"){
+                    $steps[] = [
+                        'step'=>9,
+                        'message'=>'Document Process Completed',
+                        'data'=>$documentProcess,
+                    ];
+                }
+            }
 
 
 
+            $visaProcess = VisaProcess::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
 
 
+            if($visaProcess){
+                $steps[] = [
+                    'step'=>10,
+                    'message'=>'Visa Process Started',
+                    'data'=>$visaProcess,
+                ];
+            }
+
+            if($visaProcess){
+                $message = 'Visa Process '.$visaProcess->status;
+                $steps[] = [
+                    'step'=>11,
+                    'message'=>$message,
+                    'data'=>$visaProcess,
+                ];
+            }
+
+            $evisa = EVisaProcess::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
+
+            if($evisa){
+                $steps[] = [
+                    'step'=>10,
+                    'message'=>'E Visa Process Started',
+                    'data'=>$evisa,
+                ];
+            }
+
+            if($evisa){
+                $message = 'E Visa Process '.$evisa->status;
+                $steps[] = [
+                    'step'=>11,
+                    'message'=>$message,
+                    'data'=>$evisa,
+                ];
+            }
+
+            $labourPermit = LabourPermit::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
+
+
+            
+            if($labourPermit){
+                $steps[] = [
+                    'step'=>12,
+                    'message'=>'Permit Process Started',
+                    'data'=>$labourPermit,
+                ];
+            }
+
+            if($labourPermit){
+                $message = 'Permit Process '.$labourPermit->status;
+                $steps[] = [
+                    'step'=>13,
+                    'message'=>$message,
+                    'data'=>$evisa,
+                ];
+            }
+
+            $eticket = ETicketProcess::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
+
+
+            if($eticket){
+                $steps[] = [
+                    'step'=>14,
+                    'message'=>'Ticket Process Started',
+                    'data'=>$eticket,
+                ];
+            }
+
+            if($eticket){
+                $message = 'Ticket Process '.$eticket->status;
+                $steps[] = [
+                    'step'=>15,
+                    'message'=>$message,
+                    'data'=>$evisa,
+                ];
+            }
+
+            $finaleJob = FinalJobstatus::where([
+                'user_id'=>$candidate->user_id,
+                'company_id'=>$candidate->company_id,
+                'demand_id'=>$candidate->demand_id,
+            ])->first();
+
+            if($finaleJob){
+                if((int)$finaleJob->status == 1){
+                    $steps[] = [
+                        'step'=>16,
+                        'message'=>"Engaged On Job",
+                        'data'=>$evisa,
+                    ];
+                }
+            }
+
+
+
+            
+            $process['steps']=$steps;
+            $processes[] = $process;
+       }
+       return response()->json([
+            'success'=>true,
+            'message'=>'Application Process',
+            'data'=>$processes,
+       ]);
+    }
 }
