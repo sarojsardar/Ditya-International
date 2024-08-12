@@ -72,7 +72,7 @@ class InterviewController extends Controller
 
         return response()->json([
             'success' => true,
-            'message'=>'Selected Interview List',
+            'message'=>'Interview List',
             'data' => $interviews,
         ]);
     }
@@ -95,10 +95,14 @@ class InterviewController extends Controller
             })
             ->where('company_candidates.user_id', $userID)
             ->where('interviews.is_taken', false)
-            ->where(DB::raw("CONCAT(interview_date, ' ', interview_time)"), '>=', $now)
+            // ->where(DB::raw("CONCAT(interview_date, ' ', interview_time)"), '>=', $now)
 
             ->where('company_candidates.demand_status', UserDemandStatus::Approved)
             ->where('company_candidates.interview_status', UserInterviewStatus::Pending)
+            ->where(function($q) {
+                $q->whereNull('interviews.interview_date')
+                  ->orWhere('interviews.interview_date', '');
+            })
             ->select([
                 'company_candidates.*',
                 'company_candidates.id as caompany_candidate_id',
@@ -416,12 +420,10 @@ class InterviewController extends Controller
             if($interview){
                 $steps[] = [
                     'step'=>2,
-                    'message'=>'Interview Scheduled',
+                    'message'=>'Interview Process Started',
                     'data'=>$interview,
                 ];
-            }
 
-            if($interview){
                 if($interview->user_accept_status == "Accepted" || $interview->user_accept_status=="Declined"){
                     $steps[] = [
                         'step'=>3,
@@ -429,200 +431,534 @@ class InterviewController extends Controller
                         'data'=>$interview,
                     ];
                 }
-            }
-
-            if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
-                $steps[] = [
-                    'step'=>4,
-                    'message'=>'Interview Attended',
-                    'data'=>$interview,
-                ];
-            }
-
-
-            if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
-                $message = "Rejected";
-                if((bool)$interview->is_selected){
-                    $steps[] = [
-                        'step'=>5,
-                        'message'=>'Selected',
-                        'data'=>$interview,
-                    ];
+                if($interview->user_accept_status == "Accepted"){
+                    if($interview->interview_date !== null && $interview->interview_date !== ''){
+                        $steps[] = [
+                            'step'=>4,
+                            'message'=>'Interview Scheduled',
+                            'data'=>$interview,
+                        ];
+                    }
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        $steps[] = [
+                            'step'=>5,
+                            'message'=>'Interview Attended',
+                            'data'=>$interview,
+                        ];
+                    }
+    
+    
+    
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        $message = "Rejected";
+                        if((bool)$interview->is_selected){
+                            $steps[] = [
+                                'step'=>6,
+                                'message'=>'Selected',
+                                'data'=>$interview,
+                            ];
+                        }
+                    }
+    
+    
+    
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        if((bool)$interview->is_selected){
+                            $medicalCheckup = MedicalCheckup::where([
+                                'company_id'=>$candidate->company_id,
+                                'demand_id'=>$candidate->demand_id,
+                                'user_id'=>$user->id,
+                            ])->latest()->first();
+                
+                            if($medicalCheckup){
+                                $steps[] = [
+                                    'step'=>7,
+                                    'message'=>'Medical Checkup Scheduled',
+                                    'data'=>$medicalCheckup,
+                                ];
+                                if((bool)$medicalCheckup->is_tested){
+                                    $steps[] = [
+                                        'step'=>8,
+                                        'message'=>'Medical Checkup Done',
+                                        'data'=>$medicalCheckup,
+                                    ];
+    
+                                    if($medicalCheckup->status == "Fit"){
+                                        $documentProcess = DocumentProcess::where([
+                                            'user_id'=>$candidate->user_id,
+                                            'company_id'=>$candidate->company_id,
+                                            'demand_id'=>$candidate->demand_id,
+                                        ])->first();
+                            
+                                        if($documentProcess){
+                                            $steps[] = [
+                                                'step'=>9,
+                                                'message'=>'Document Process Started',
+                                                'data'=>$documentProcess,
+                                            ];
+                                        }
+                            
+                            
+                                        if($documentProcess){
+                                            if($documentProcess->status == "Completed"){
+                                                $steps[] = [
+                                                    'step'=>10,
+                                                    'message'=>'Document Process Completed',
+                                                    'data'=>$documentProcess,
+                                                ];
+    
+    
+                                                if($documentProcess->status == "Completed"){
+                                                    $visaProcess = VisaProcess::where([
+                                                        'user_id'=>$candidate->user_id,
+                                                        'company_id'=>$candidate->company_id,
+                                                        'demand_id'=>$candidate->demand_id,
+                                                    ])->first();
+                                        
+                                        
+                                                    if($visaProcess){
+                                                        $steps[] = [
+                                                            'step'=>11,
+                                                            'message'=>'Visa Process Started',
+                                                            'data'=>$visaProcess,
+                                                        ];
+    
+    
+                                                        $message = 'Visa Process '.$visaProcess->status;
+                                                        $steps[] = [
+                                                            'step'=>12,
+                                                            'message'=>$message,
+                                                            'data'=>$visaProcess,
+                                                        ];
+                                                        if($visaProcess->status == "Successed"){
+                                                            $evisa = EVisaProcess::where([
+                                                                'user_id'=>$candidate->user_id,
+                                                                'company_id'=>$candidate->company_id,
+                                                                'demand_id'=>$candidate->demand_id,
+                                                            ])->first();
+                                                
+                                                            if($evisa){
+                                                                $steps[] = [
+                                                                    'step'=>13,
+                                                                    'message'=>'E Visa Process Started',
+                                                                    'data'=>$evisa,
+                                                                ];
+    
+    
+    
+                                                                $message = 'E Visa Process '.$evisa->status;
+                                                                $steps[] = [
+                                                                    'step'=>14,
+                                                                    'message'=>$message,
+                                                                    'data'=>$evisa,
+                                                                ];
+                                                                if($evisa->status == "Successed"){
+                                                                    $labourPermit = LabourPermit::where([
+                                                                        'user_id'=>$candidate->user_id,
+                                                                        'company_id'=>$candidate->company_id,
+                                                                        'demand_id'=>$candidate->demand_id,
+                                                                    ])->first();
+                                                        
+                                                        
+                                                                    
+                                                                    if($labourPermit){
+                                                                        $steps[] = [
+                                                                            'step'=>15,
+                                                                            'message'=>'Permit Process Started',
+                                                                            'data'=>$labourPermit,
+                                                                        ];
+    
+                                                                        $message = 'Permit Process '.$labourPermit->status;
+                                                                        $steps[] = [
+                                                                            'step'=>16,
+                                                                            'message'=>$message,
+                                                                            'data'=>$evisa,
+                                                                        ];
+    
+    
+                                                                        if($labourPermit->status == "Successed"){
+                                                                            $eticket = ETicketProcess::where([
+                                                                                'user_id'=>$candidate->user_id,
+                                                                                'company_id'=>$candidate->company_id,
+                                                                                'demand_id'=>$candidate->demand_id,
+                                                                            ])->first();
+                                                                
+                                                                
+                                                                            if($eticket){
+                                                                                $steps[] = [
+                                                                                    'step'=>17,
+                                                                                    'message'=>'Ticket Process Started',
+                                                                                    'data'=>$eticket,
+                                                                                ];
+    
+                                                                                $message = 'Ticket Process '.$eticket->status;
+                                                                                $steps[] = [
+                                                                                    'step'=>18,
+                                                                                    'message'=>$message,
+                                                                                    'data'=>$evisa,
+                                                                                ];
+    
+                                                                                if($eticket->status == "Successed"){
+                                                                                    $finaleJob = FinalJobstatus::where([
+                                                                                        'user_id'=>$candidate->user_id,
+                                                                                        'company_id'=>$candidate->company_id,
+                                                                                        'demand_id'=>$candidate->demand_id,
+                                                                                    ])->first();
+                                                                        
+                                                                                    if($finaleJob){
+                                                                                        if((int)$finaleJob->status == 1){
+                                                                                            $steps[] = [
+                                                                                                'step'=>19,
+                                                                                                'message'=>"Engaged On Job",
+                                                                                                'data'=>$evisa,
+                                                                                            ];
+                                                                                        }
+                                                                                    }
+                                                                        
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+    
+                                                            }
+    
+                                                        }
+    
+                                                    }
+                                                }
+                                            }
+                                        }
+                            
+                                    }
+                                }
+    
+                            }
+                        }
+                    } 
                 }
             }
+            $process['steps']=$steps;
+            $processes[] = $process;
+       }
+       return response()->json([
+            'success'=>true,
+            'message'=>'Application Process',
+            'data'=>$processes,
+       ]);
+    }
 
 
-            $medicalCheckup = MedicalCheckup::where([
-                'company_id'=>$candidate->company_id,
+
+
+    public function showInterviewProcess(Request $request, $id)
+    {
+        $user = auth()->user();
+
+        $interview = Interview::where([
+            'id'=>$id,
+            'user_id'=>$user->id,
+        ])->latest()->first();
+
+       $candidate =  $companyCandidates = CompanyCandidate::query()
+       ->leftJoin('company_demands', 'company_demands.id', '=', 'company_candidates.demand_id')
+       ->leftJoin('users as company_user', 'company_demands.company_id', '=', 'company_user.id')
+       ->leftJoin('companies', 'companies.id', '=', 'company_candidates.company_id')
+       ->leftJoin('users as candidates', 'candidates.id', '=', 'company_candidates.user_id')
+       ->leftJoin('user_details as candidate_details', 'candidate_details.user_id', '=', 'candidates.id')
+       ->leftJoin('user_information as candidate_information', 'candidate_information.user_id', '=', 'candidates.id')
+       ->leftJoin('upload_photos', 'candidates.id', '=', 'upload_photos.user_id')
+       ->where('company_candidates.user_id', $user->id)
+       ->where('company_candidates.user_id', $user->id)
+       ->leftJoin('interviews', function ($join) {
+        $join->on('interviews.user_id', '=', 'candidates.id')
+            ->on('interviews.demand_id', '=', 'company_candidates.demand_id');
+        })
+        ->where('interviews.id', $interview->id)
+       ->orderBy('id', 'desc')
+       ->select([
+        'company_candidates.*',
+        'companies.name as company_name',
+        'companies.address as company_address',
+        'companies.logo as company_logo',
+        'companies.country as company_country',
+        'company_user.id as company_user_id',
+
+        'candidates.id as candidate_id',
+        'candidates.email as candidate_email',
+
+        'company_demands.demand_code as demand_demand_code',
+        'company_demands.gender as demand_gender',
+        'age_from',
+        'age_to',
+        'company_demands.height as demand_height',
+        'company_demands.weight as demand_weight',
+        'experience_year',
+        'education',
+        'edu_level',
+        'demand_letter',
+        'company_demands.status as demand_status',
+       ])->first();
+
+
+        $processes =[];
+        $processes = [
+            'company_info'=>[
+                'id'=>$candidate->company_id,
+                'company_name'=>$candidate->company_name,
+                'company_logo'=>$candidate->company_logo,
+                'company_address'=>$candidate->company_address,
+                'company_country'=>Country::where('id', $candidate->company_country)->first()?->name,
+            ],
+            'demand_info'=>[
+                'demand_code'=>$candidate->demand_code,
+                'gender'=>$candidate->demand_gender,
+                'age_from'=>$candidate->age_from,
+                'age_to'=>$candidate->age_to,
+                'height'=>$candidate->demand_height,
+                'weight'=>$candidate->demand_weight,
+                'experience_year'=>$candidate->experience_year,
+                'education'=>$candidate->education,
+                'edu_level'=>$candidate->edu_level,
+                'demand_letter'=>$candidate->demand_letter,
+                'demand_status'=>$candidate->demand_status,
+            ],
+        ];
+            $steps = [];
+            $steps[] = [
+                'step'=>1,
+                'message'=>'Wishlisted',
+                'data'=>[],
+            ];
+
+
+            $interview = Interview::where([
                 'demand_id'=>$candidate->demand_id,
                 'user_id'=>$user->id,
             ])->latest()->first();
 
-            if($medicalCheckup){
+            if($interview){
                 $steps[] = [
-                    'step'=>6,
-                    'message'=>'Medical Checkup Scheduled',
-                    'data'=>$medicalCheckup,
+                    'step'=>2,
+                    'message'=>'Interview Process Started',
+                    'data'=>$interview,
                 ];
-            }
 
-
-            if($medicalCheckup){
-                if((bool)$medicalCheckup->is_tested){
+                if($interview->user_accept_status == "Accepted" || $interview->user_accept_status=="Declined"){
                     $steps[] = [
-                        'step'=>7,
-                        'message'=>'Medical Checkup Done',
-                        'data'=>$medicalCheckup,
+                        'step'=>3,
+                        'message'=>'Interview '.$interview->user_accept_status .' By You',
+                        'data'=>$interview,
                     ];
                 }
-            }
-
-
-            $documentProcess = DocumentProcess::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-            if($documentProcess){
-                $steps[] = [
-                    'step'=>8,
-                    'message'=>'Document Process Started',
-                    'data'=>$documentProcess,
-                ];
-            }
-
-
-            if($documentProcess){
-                if($documentProcess->status == "Completed"){
-                    $steps[] = [
-                        'step'=>9,
-                        'message'=>'Document Process Completed',
-                        'data'=>$documentProcess,
-                    ];
+                if($interview->user_accept_status == "Accepted"){
+                    if($interview->interview_date !== null && $interview->interview_date !== ''){
+                        $steps[] = [
+                            'step'=>4,
+                            'message'=>'Interview Scheduled',
+                            'data'=>$interview,
+                        ];
+                    }
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        $steps[] = [
+                            'step'=>5,
+                            'message'=>'Interview Attended',
+                            'data'=>$interview,
+                        ];
+                    }
+    
+    
+    
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        $message = "Rejected";
+                        if((bool)$interview->is_selected){
+                            $steps[] = [
+                                'step'=>6,
+                                'message'=>'Selected',
+                                'data'=>$interview,
+                            ];
+                        }
+                    }
+    
+    
+    
+                    if($interview->user_accept_status == "Accepted" && (bool)$interview->is_taken){
+                        if((bool)$interview->is_selected){
+                            $medicalCheckup = MedicalCheckup::where([
+                                'company_id'=>$candidate->company_id,
+                                'demand_id'=>$candidate->demand_id,
+                                'user_id'=>$user->id,
+                            ])->latest()->first();
+                
+                            if($medicalCheckup){
+                                $steps[] = [
+                                    'step'=>7,
+                                    'message'=>'Medical Checkup Scheduled',
+                                    'data'=>$medicalCheckup,
+                                ];
+                                if((bool)$medicalCheckup->is_tested){
+                                    $steps[] = [
+                                        'step'=>8,
+                                        'message'=>'Medical Checkup Done',
+                                        'data'=>$medicalCheckup,
+                                    ];
+    
+                                    if($medicalCheckup->status == "Fit"){
+                                        $documentProcess = DocumentProcess::where([
+                                            'user_id'=>$candidate->user_id,
+                                            'company_id'=>$candidate->company_id,
+                                            'demand_id'=>$candidate->demand_id,
+                                        ])->first();
+                            
+                                        if($documentProcess){
+                                            $steps[] = [
+                                                'step'=>9,
+                                                'message'=>'Document Process Started',
+                                                'data'=>$documentProcess,
+                                            ];
+                                        }
+                            
+                            
+                                        if($documentProcess){
+                                            if($documentProcess->status == "Completed"){
+                                                $steps[] = [
+                                                    'step'=>10,
+                                                    'message'=>'Document Process Completed',
+                                                    'data'=>$documentProcess,
+                                                ];
+    
+    
+                                                if($documentProcess->status == "Completed"){
+                                                    $visaProcess = VisaProcess::where([
+                                                        'user_id'=>$candidate->user_id,
+                                                        'company_id'=>$candidate->company_id,
+                                                        'demand_id'=>$candidate->demand_id,
+                                                    ])->first();
+                                        
+                                        
+                                                    if($visaProcess){
+                                                        $steps[] = [
+                                                            'step'=>11,
+                                                            'message'=>'Visa Process Started',
+                                                            'data'=>$visaProcess,
+                                                        ];
+    
+    
+                                                        $message = 'Visa Process '.$visaProcess->status;
+                                                        $steps[] = [
+                                                            'step'=>12,
+                                                            'message'=>$message,
+                                                            'data'=>$visaProcess,
+                                                        ];
+                                                        if($visaProcess->status == "Successed"){
+                                                            $evisa = EVisaProcess::where([
+                                                                'user_id'=>$candidate->user_id,
+                                                                'company_id'=>$candidate->company_id,
+                                                                'demand_id'=>$candidate->demand_id,
+                                                            ])->first();
+                                                
+                                                            if($evisa){
+                                                                $steps[] = [
+                                                                    'step'=>13,
+                                                                    'message'=>'E Visa Process Started',
+                                                                    'data'=>$evisa,
+                                                                ];
+    
+    
+    
+                                                                $message = 'E Visa Process '.$evisa->status;
+                                                                $steps[] = [
+                                                                    'step'=>14,
+                                                                    'message'=>$message,
+                                                                    'data'=>$evisa,
+                                                                ];
+                                                                if($evisa->status == "Successed"){
+                                                                    $labourPermit = LabourPermit::where([
+                                                                        'user_id'=>$candidate->user_id,
+                                                                        'company_id'=>$candidate->company_id,
+                                                                        'demand_id'=>$candidate->demand_id,
+                                                                    ])->first();
+                                                        
+                                                        
+                                                                    
+                                                                    if($labourPermit){
+                                                                        $steps[] = [
+                                                                            'step'=>15,
+                                                                            'message'=>'Permit Process Started',
+                                                                            'data'=>$labourPermit,
+                                                                        ];
+    
+                                                                        $message = 'Permit Process '.$labourPermit->status;
+                                                                        $steps[] = [
+                                                                            'step'=>16,
+                                                                            'message'=>$message,
+                                                                            'data'=>$evisa,
+                                                                        ];
+    
+    
+                                                                        if($labourPermit->status == "Successed"){
+                                                                            $eticket = ETicketProcess::where([
+                                                                                'user_id'=>$candidate->user_id,
+                                                                                'company_id'=>$candidate->company_id,
+                                                                                'demand_id'=>$candidate->demand_id,
+                                                                            ])->first();
+                                                                
+                                                                
+                                                                            if($eticket){
+                                                                                $steps[] = [
+                                                                                    'step'=>17,
+                                                                                    'message'=>'Ticket Process Started',
+                                                                                    'data'=>$eticket,
+                                                                                ];
+    
+                                                                                $message = 'Ticket Process '.$eticket->status;
+                                                                                $steps[] = [
+                                                                                    'step'=>18,
+                                                                                    'message'=>$message,
+                                                                                    'data'=>$evisa,
+                                                                                ];
+    
+                                                                                if($eticket->status == "Successed"){
+                                                                                    $finaleJob = FinalJobstatus::where([
+                                                                                        'user_id'=>$candidate->user_id,
+                                                                                        'company_id'=>$candidate->company_id,
+                                                                                        'demand_id'=>$candidate->demand_id,
+                                                                                    ])->first();
+                                                                        
+                                                                                    if($finaleJob){
+                                                                                        if((int)$finaleJob->status == 1){
+                                                                                            $steps[] = [
+                                                                                                'step'=>19,
+                                                                                                'message'=>"Engaged On Job",
+                                                                                                'data'=>$evisa,
+                                                                                            ];
+                                                                                        }
+                                                                                    }
+                                                                        
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+    
+                                                            }
+    
+                                                        }
+    
+                                                    }
+                                                }
+                                            }
+                                        }
+                            
+                                    }
+                                }
+    
+                            }
+                        }
+                    } 
                 }
             }
-
-
-
-            $visaProcess = VisaProcess::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-
-            if($visaProcess){
-                $steps[] = [
-                    'step'=>10,
-                    'message'=>'Visa Process Started',
-                    'data'=>$visaProcess,
-                ];
-            }
-
-            if($visaProcess){
-                $message = 'Visa Process '.$visaProcess->status;
-                $steps[] = [
-                    'step'=>11,
-                    'message'=>$message,
-                    'data'=>$visaProcess,
-                ];
-            }
-
-            $evisa = EVisaProcess::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-            if($evisa){
-                $steps[] = [
-                    'step'=>10,
-                    'message'=>'E Visa Process Started',
-                    'data'=>$evisa,
-                ];
-            }
-
-            if($evisa){
-                $message = 'E Visa Process '.$evisa->status;
-                $steps[] = [
-                    'step'=>11,
-                    'message'=>$message,
-                    'data'=>$evisa,
-                ];
-            }
-
-            $labourPermit = LabourPermit::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-
-            
-            if($labourPermit){
-                $steps[] = [
-                    'step'=>12,
-                    'message'=>'Permit Process Started',
-                    'data'=>$labourPermit,
-                ];
-            }
-
-            if($labourPermit){
-                $message = 'Permit Process '.$labourPermit->status;
-                $steps[] = [
-                    'step'=>13,
-                    'message'=>$message,
-                    'data'=>$evisa,
-                ];
-            }
-
-            $eticket = ETicketProcess::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-
-            if($eticket){
-                $steps[] = [
-                    'step'=>14,
-                    'message'=>'Ticket Process Started',
-                    'data'=>$eticket,
-                ];
-            }
-
-            if($eticket){
-                $message = 'Ticket Process '.$eticket->status;
-                $steps[] = [
-                    'step'=>15,
-                    'message'=>$message,
-                    'data'=>$evisa,
-                ];
-            }
-
-            $finaleJob = FinalJobstatus::where([
-                'user_id'=>$candidate->user_id,
-                'company_id'=>$candidate->company_id,
-                'demand_id'=>$candidate->demand_id,
-            ])->first();
-
-            if($finaleJob){
-                if((int)$finaleJob->status == 1){
-                    $steps[] = [
-                        'step'=>16,
-                        'message'=>"Engaged On Job",
-                        'data'=>$evisa,
-                    ];
-                }
-            }
-
-
-
-            
-            $process['steps']=$steps;
-            $processes[] = $process;
-       }
+            $processes['steps'] = $steps;
        return response()->json([
             'success'=>true,
             'message'=>'Application Process',

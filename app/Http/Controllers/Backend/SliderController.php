@@ -136,7 +136,7 @@ class SliderController extends Controller
             $path = 'uploads/sliders/' . $slider->image;
 
             if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
+                disk('public')->delete($path);
             } else {
                 Log::info("File does not exist or has already been deleted: $path");
             }

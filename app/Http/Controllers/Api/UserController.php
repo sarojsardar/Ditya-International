@@ -403,14 +403,64 @@ class UserController extends Controller
 
 
 
-    public function getProfile()
+   public function getProfile()
     {
         $user = auth()->user();
-
+        $returnData = [
+            'email'=>$user->email,
+            'mobile_no'=>$user->mobile_no,
+            'profile_picture'=>$user->profile_picture,
+            'full_name'=>$user?->userDetail?->full_name,
+        ];
+        return response()->json([
+            'success'=>true,
+            'message'=>'User Info for Edit',
+            'data'=>$returnData,
+        ]);
     }
 
     public function updateProfile(Request $request)
     {
+        $user = auth()->user();
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+             'email' => 'required|email|unique:users,email,' . $user->id,
+            'mobile_no' => 'required|unique:users,mobile_no,' . $user->id,
+            'profile_picture' => 'nullable|image|max:2048',  // Assuming it's an image with a max size of 2MB
+            'full_name' => 'required|string|max:255',
+        ]);
+        if($validator->fails()){
+            return response()->json([
+                'success'=>false,
+                'messsage'=>'Unprocessable data',
+                'data'=>$validator->errors(),
+            ]);
+        }
+        $user = \App\Models\User::find($user->id);
+        $user->email = $request->email;
+        $user->mobile_no = $request->mobile_no;
+        if($request->has('profile_picture') && $request->file('profile_picture')){
+            $profile_picture = (new \App\Action\FileSupportAction)->uploadFile($request->profile_picture, 'profile');
+            $profile_picture = $profile_picture;
+            $user->profile_picture = $profile_picture;
+        }
+        try {
+            $user->userDetail->full_name = $request->full_name;
+            $user->userDetail->save();
+        } catch (\Throwable $th) {
+            info("Error On saving User Detail Name ".$th->getMessage());
+        }
 
+        $user->save();
+        $returnData = [
+            'email'=>$user->refresh()->email,
+            'mobile_no'=>$user->refresh()->mobile_no,
+            'profile_picture'=>$user->refresh()->profile_picture,
+            'full_name'=>$user->userDetail->full_name,
+        ];
+        return response()->json([
+            'success'=>true,
+            'message'=>"User Info Updated",
+            'data'=>$returnData,
+        ]);
     }
 }

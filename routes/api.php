@@ -123,6 +123,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('application-process', [InterviewController::class, 'applicationProcess']);
     Route::get('/interview-process/{id}', [InterviewController::class, 'interviewProcess']);
     Route::get('/interviewInvites', [InterviewController::class, 'interviewInvites']);
+    Route::get('/interview-list/{interviewId}', [InterviewController::class, 'showInterviewProcess']);
     Route::post('/interviewStatus/{interviewId}', [InterviewController::class, 'updateStatus'])->name('changeStatus');
     
     // for the candidate notification
@@ -142,5 +143,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // New Added for the profile
     Route::get('/profile', [UserController::class, 'getProfile']);
-    Route::post('/profile', [UserController::class, 'updateProfile'])
+    Route::post('/profile', [UserController::class, 'updateProfile']);
 });
