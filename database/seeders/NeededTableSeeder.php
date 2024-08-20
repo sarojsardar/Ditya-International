@@ -13,6 +13,7 @@ use App\Models\LanguageDetail;
 use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserInformation;
+use App\Models\WorkExperience;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
@@ -85,6 +86,7 @@ class NeededTableSeeder extends Seeder
             'password' => Hash::make('password'),
             'mobile_no' => '',
             'status' => 1,
+            'user_type'=>UserTypes::DOCUMENT_OFFICER,
 
         ]);
         $user->syncRoles(['Document-Officer']);
@@ -247,6 +249,18 @@ class NeededTableSeeder extends Seeder
                 ];
                 $educationDetail = EducationalDocument::create($educationdata);
             }
+
+            $work = [
+                'user_id'=>$user->id,
+                'address'=>$faker->address(),
+                'company_name'=>$faker->name(),
+                'position'=>$faker->name(),
+                'description'=>$faker->name(),
+                'country'=>$faker->country(),
+                'no_of_years'=>$faker->numberBetween(4, 10),
+            ];
+
+            WorkExperience::create($work);
         }
 
 

@@ -1,0 +1,23 @@
+1. Make the account number as input not the text area
+
+3. Use Highest education level on the education
+
+4. Remove the pass year of education
+
+
+5. Make country as searchable select on the details
+
+6. Write Work Description label instead of the Description at the work experience page 
+
+
+7. Use Selected For Interview instead of the Approved
+
+
+
+8. Make the delete options for the work experience and again add.
+
+9. Make the language as sync to update.(completed)
+
+10. Make The page reload on scroll top
+
+

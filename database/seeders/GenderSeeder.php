@@ -19,17 +19,12 @@ class GenderSeeder extends Seeder
         Gender::truncate();
 
         Gender::create([
-            "name" => "male",
+            "name" => "Male",
             "slug" => "male"
         ]);
         Gender::create([
-            "name" => "female",
+            "name" => "Female",
             "slug" => "female"
-        ]);
-
-        Gender::create([
-            "name" => "other",
-            "slug" => "other"
         ]);
 
         Schema::enableForeignKeyConstraints();

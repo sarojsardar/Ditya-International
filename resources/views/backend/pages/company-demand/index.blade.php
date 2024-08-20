@@ -47,6 +47,7 @@ Company Demands | {{ config('app.name') }}
                                 <th>S.N</th>
                                 <th>Quota</th>
                                 <th>Demand Code</th>
+                                <th>Status</th>
                                 <th>Gender</th>
                                 <th>Age From</th>
                                 <th>Age To</th>
@@ -103,6 +104,7 @@ Company Demands | {{ config('app.name') }}
                 {'data' : 'DT_RowIndex'},
                 {'data' : 'quota'},
                 {'data' : 'demand_code'},
+                {'data' : 'status'},
                 {'data' : 'gender'},
                 {'data' : 'age_from'},
                 {'data' : 'age_to'},

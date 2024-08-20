@@ -28,6 +28,7 @@ return new class extends Migration
             $table->integer('age');
             $table->boolean('has_relatives_in_malaysia')->default(false);
             $table->boolean('has_been_in_accident')->default(false);
+            $table->string('candidate_code')->unique()->nullable();
             $table->timestamps();
         });
     }

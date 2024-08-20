@@ -91,6 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/work/experience', [UserController::class, 'updateWorkDetails']);
 
+    Route::delete('/work/experience/{id}', [UserController::class, 'deleteWorkDetails']);
+
     Route::post('/bank/info', [UserController::class, 'updateBankDetails']);
 
     Route::post('/category/info', [UserController::class, 'updateCategoryDetails']);

@@ -62,14 +62,14 @@ class NotificationAction
             }
         }
     }
-    private function pushToEmail()
+    private function pushToEmail($filePath=null)
     {
         if((int)$this->send_to == NotificationSendEnum::EMIAL ||  (int)$this->send_to == NotificationSendEnum::ALL){
             if($this->generated_to !== "System"){
-                $receiver = $this->generated_to::where('id', $this->generated_by)->first();
+                $receiver = $this->generated_to::where('id', $this->generated_to_id)->first();
                 if($receiver){
                     if($receiver->email){
-                        SendEmailJob::dispatch($this->mobile_content, $receiver->email, $this->title);
+                        dispatch(new SendEmailJob($this->mobile_content, $receiver->email, $this->title, null, null, $filePath));
                     }
                 }
             }
@@ -81,7 +81,7 @@ class NotificationAction
             
         }
     }
-    public function pushNotification()
+    public function pushNotification($filePath=null)
     {
         try {
             if($this->web_content || $this->mobile_content){
@@ -101,7 +101,7 @@ class NotificationAction
                 ]);
 
                 $this->pushToSms();
-                $this->pushToEmail();
+                $this->pushToEmail($filePath);
                 $this->pushToSystem();
             }   
         } catch (\Throwable $th) {

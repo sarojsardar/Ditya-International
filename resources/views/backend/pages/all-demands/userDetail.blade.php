@@ -430,12 +430,12 @@
                                 <div class="form-group">
                                     <label for="">Status</label>
                                     <select name="demand_status" id="statusDropdown" class="form-control">
-                                        <option value="Approved">Approved</option>
+                                        <option value="">Please Choose</option>
+                                        <option value="Approved">Select for Calling Interview</option>
                                         <option value="Rejected">Rejected</option>
                                     </select>
                                 </div>
                             @endif
-
 
                             @if($actualCandidate && $interview)
                                 <div class="form-group">
@@ -449,7 +449,6 @@
                                     </select>
                                 </div>
                             @endif
-
 
 
                             @if((int)auth()->user()->user_type !== \App\Enum\UserTypes::COMPANY)

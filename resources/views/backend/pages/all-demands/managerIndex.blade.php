@@ -239,7 +239,7 @@
                     window.location.reload();
                 },
                 error: function(xhr) {
-                    alert(`Error: ${xhr.statusText}`);
+                    // alert(`Error: ${xhr.statusText}`);
                 }
             });
         });

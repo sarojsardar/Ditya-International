@@ -31,7 +31,7 @@ class UserController extends Controller
             'mother_name' => 'required|string|max:255',
             'marital_status' => 'required|string',
             'spouse_name' => 'nullable',
-            'gender' => 'required|string|in:male,female',
+            'gender' => 'required|string',
             'height' => 'required|numeric',
             'weight' => 'required|numeric',
             'dob' => 'required|date',
@@ -50,10 +50,16 @@ class UserController extends Controller
             $dob = Carbon::parse($validatedData['dob']);
             $age = $dob->age; // This calculates the age based on the DOB
 
-         //   dd($age);
 
+            $userDetail = UserDetail::where('user_id', $user->id)->latest()->first();
+            $candidateCode = generateCandidatecode();
+            if($userDetail){
+                $candidateCode = $userDetail->candidate_code;
+            }
             $userDetail = UserDetail::updateOrCreate(
-                ['user_id' => $user->id],
+                [
+                    'user_id' => $user->id,
+                ],
                 [
                     'full_name' => $validatedData['full_name'],
                     'permanent_address' => $validatedData['permanent_address'],
@@ -69,7 +75,7 @@ class UserController extends Controller
                     'age' => $age, // Store the calculated age
                     'has_relatives_in_malaysia' => $validatedData['has_relatives_in_malaysia'],
                     'has_been_in_accident' => $validatedData['has_been_in_accident'],
-
+                    'candidate_code'=>$candidateCode,
                 ]
             );
 
@@ -334,13 +340,30 @@ class UserController extends Controller
         $userId = $user->id;
 
         // Loop through each language in the request
-        foreach ($request->input('language_name') as $languageName) {
-            // Update or create user details for each language
-            LanguageDetail::updateOrCreate(
-                ['user_id' => $userId,
-                'language_name' => $languageName],
-            );
-        }
+           // info($request->input('language_name') );
+           \DB::table('language_details')->where('user_id', $user->id)->delete();
+           foreach ($request->input('language_name') as $languageName) {
+               // Update or create user details for each language
+               
+               // This may be change after the mobile app issue fixed
+               
+               $langName = \App\Models\Language::where('name', $languageName)->first();
+            //    if($langName){
+                    LanguageDetail::create([
+                       'user_id' => $userId,
+                       'language_name' => $languageName
+                   ]);
+            //    }
+               // LanguageDetail::updateOrCreate(
+               //     [
+               //         'user_id' => $userId,
+               //     ],
+               //     [
+               //          'language_name' => $languageName    
+               //     ]
+               // );
+           }
+   
 
         return response()->json(['status' => true, 'message' => 'Language details updated successfully']);
     }
@@ -462,5 +485,28 @@ class UserController extends Controller
             'message'=>"User Info Updated",
             'data'=>$returnData,
         ]);
+    }
+
+    public function deleteWorkDetails(Request $request, $id)
+    {
+        try {
+            $user = auth()->user();
+            $workEx = WorkExperience::where('user_id', $user->id)->where('id', $id)->first();
+            if($workEx){
+                $workEx->delete();
+            }
+
+            return response()->json([
+                'success'=>true,
+                'message'=>'Deleted Successfully',
+                'data'=>[],
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success'=>false,
+                'message'=>$th->getMessage(),
+                'data'=>[],
+            ], 200);
+        }
     }
 }

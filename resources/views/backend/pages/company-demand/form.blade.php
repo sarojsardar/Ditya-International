@@ -248,13 +248,44 @@ Company Demand Entry | {{ config('app.name') }}
         </div>
         <div class="d-flex justify-content-center">
             <div class="d-grid w-25 mt-10">
-                <button type="submit" class="btn btn-primary waves-effect waves-light">
+               <div class="d-flex">
+                <button type="submit" class="m-1 btn btn-primary waves-effect waves-light">
                     Submit
                 </button>
+
+                @if(@$demand->id && (@$demand->status == "Open" || @$demand->status == "Pending"))
+                   @if(auth()->user()->roles()->first()->name !== "Company")
+                    <button data-demand_status="Close" type="button" id="close-demand" class="m-1 btn btn-danger waves-effect waves-light">
+                        <input type="hidden" name="status" value="Close">
+                        Close Demand
+                    </button>
+                   @endif
+                @endif
+
+
+                @if(@$demand->id && (@$demand->status == "Close"))
+                    @if(auth()->user()->roles()->first()->name !== "Company")
+                    <button data-demand_status="Open" type="button" id="close-demand" class="m-1 btn btn-danger waves-effect waves-light">
+                        Open Demand
+                    </button>
+                    @endif
+                @endif
+
+                
+               </div>
             </div>
         </div>
     </form>
 
+    @if(@$demand->id)
+    
+    <form action=" {{ route('company-demand.close', @$demand->id) }} " method="post"  id="close-demand-form">
+        <input type="hidden" id="let-demand-status" name="status" value="Close">
+        @csrf
+        @method('PATCH')
+    </form>
+
+    @endif
    
 
 </div>
@@ -290,6 +321,13 @@ Company Demand Entry | {{ config('app.name') }}
 </script>
 
 <script>
+
+    $(document).on('click', '#close-demand', function(e){
+        e.preventDefault();
+        let demandStatus = $(this).data('demand_status');
+        $('#let-demand-status').val(demandStatus);
+        $('#close-demand-form').submit();
+    });
     $(document).ready(function() {
 
             $('.select2-options').select2();

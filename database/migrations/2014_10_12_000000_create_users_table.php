@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('status');
             $table->string('demand_status')->default('New');
             $table->string('reference_id')->nullable();
+            $table->string('profile_picture')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

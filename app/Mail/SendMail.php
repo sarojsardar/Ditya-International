@@ -12,16 +12,17 @@ use Illuminate\Queue\SerializesModels;
 class SendMail extends Mailable
 {
     use Queueable, SerializesModels;
-    protected $web_content, $title, $fromEmail, $from_address;
+    protected $web_content, $title, $fromEmail, $from_address, $filepath;
     /**
      * Create a new message instance.
      */
-    public function __construct($web_content, $title, $from, $from_address)
+    public function __construct($web_content, $title, $from, $from_address=null, $filepath=null)
     {
         $this->web_content = $web_content;
         $this->title = $title;
         $this->fromEmail = $from;
         $this->from_address = $from_address;
+        $this->filepath = $filepath;
     }
 
     
@@ -33,7 +34,7 @@ class SendMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            from: $this->from_address ?? env('MAIL_FROM_NAME', "System"),
+            from: $this->from_address ?? env('MAIL_FROM_ADDRESS', "dangaura.tejendra.123@gmail.com"),
             subject: $this->title,
         );
     }
@@ -63,8 +64,16 @@ class SendMail extends Mailable
     
     public function build()
     {
-        return $this->subject($this->title)
+        $email =  $this->subject($this->title)
                     ->html($this->web_content);
+
+            if ($this->filepath) {
+                $email->attach($this->filepath, [
+                    'as' => 'interview-attend.png',  // Optional: specify a name for the attachment
+                    'mime' => 'image/png'  // Optional: specify the MIME type
+                ]);
+            }
+
                     // or use ->text('This is your plain text content');
     }
 }

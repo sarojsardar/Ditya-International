@@ -100,8 +100,8 @@ class InterviewController extends Controller
             ->where('company_candidates.demand_status', UserDemandStatus::Approved)
             ->where('company_candidates.interview_status', UserInterviewStatus::Pending)
             ->where(function($q) {
-                $q->whereNull('interviews.interview_date')
-                  ->orWhere('interviews.interview_date', '');
+                $q->whereNotNull('interviews.interview_date')
+                  ->orWhere('interviews.interview_date', '!=', '');
             })
             ->select([
                 'company_candidates.*',

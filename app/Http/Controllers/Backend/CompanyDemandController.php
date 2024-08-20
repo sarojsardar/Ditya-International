@@ -26,10 +26,12 @@ use App\Data\Country\CountryData;
 use App\Enum\UserInterviewStatus;
 use App\Action\NotificationAction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Candidat\MedicalCheckup;
 use Illuminate\Support\Facades\Validator;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Data\CompanyDemand\CompanyDemandData;
 use App\Action\CandidateStatusNotificationAction;
@@ -41,7 +43,11 @@ class CompanyDemandController extends Controller
         
         $user = Auth::user();
         $userId = $user->id;
-        $companyDemand =  CompanyDemand::where('company_id', $userId)->orderBy('created_at', 'desc');
+
+        $companyDemand =  CompanyDemand::orderBy('created_at', 'desc');
+        if($user->roles()->first()->name == "Company"){
+            $companyDemand->where('company_id', $userId);
+        }
         
         if($request->ajax()){
             return DataTables::of($companyDemand)
@@ -372,21 +378,28 @@ class CompanyDemandController extends Controller
     }
 
     public function store(Request $request){
-        $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->latest()->first();
-        if($demand){
-            session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
-            return redirect()->route('company-demand.index');
-        }
-        DB::beginTransaction();
-        try{
-            (new CompanyDemandData($request))->store();
-            DB::commit();
-            return redirect()->route('company-demand.index')->with('success', 'Demand generated successfully');
 
-        }catch(\Exception $e){
+        DB::beginTransaction();
+        try {
+            $demand = CompanyDemand::whereNotIn('status', ['close', 'completed'])->where('company_id', auth()->user()->id)->latest()->first();
+            if($demand){
+                session()->flash('error', 'Sorry You have already opened a demand, please close or complete your demand first');
+                return redirect()->route('company-demand.index');
+            }
+            try{
+                (new CompanyDemandData($request))->store();
+                DB::commit();
+                return redirect()->route('company-demand.index')->with('success', 'Demand generated successfully');
+    
+            }catch(\Exception $e){
+                DB::rollBack();
+                return back()->with('error', $e);
+            }
+        } catch (\Throwable $th) {
             DB::rollBack();
-            return back()->with('error', $e);
+            session()->flash('error', $th->getMessage());
         }
+       
 
     }
 
@@ -413,7 +426,7 @@ class CompanyDemandController extends Controller
         ]);
 
         DB::beginTransaction();
-        // try {
+        try {
             // It's safer to use the validated company rather than fetching again
             // $company = (new CompanyData())->getCompany($request->company_id);
 
@@ -443,6 +456,40 @@ class CompanyDemandController extends Controller
             return back();
             return redirect()->route('company-demand.index')->with('success', 'Demand updated successfully');
 
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Consider logging the exception if you aren't already
+            \Log::error($e->getMessage());
+            return back()->with('error', 'An error occurred while updating the demand.');
+        }
+    }
+    
+
+    public function closeDemand(Request $request, $demandId)
+    {
+        DB::beginTransaction();
+        // try {
+            // It's safer to use the validated company rather than fetching again
+            // $company = (new CompanyData())->getCompany($request->company_id);
+
+            $demand = (new CompanyDemandData())->getDemand($demandId);
+            $demand->status = $request->status;
+            $demand->save();
+
+            // Assuming you might want to refresh the $demand after updates
+            $demand->refresh();
+
+            // foreach($demand->candidates as $candidate){
+            //     if($candidate->invoice){
+            //         $candidate->invoice->update([
+            //             'total_payment' => $request->office_rate
+            //         ]);
+            //     }
+            // }
+            
+            DB::commit();
+            return redirect()->route('company-demand.index')->with('success', 'Demand updated successfully');
+
         // } catch (\Exception $e) {
         //     DB::rollBack();
         //     // Consider logging the exception if you aren't already
@@ -460,8 +507,10 @@ class CompanyDemandController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $demand = User::findOrFail($id);
 
+        // DB::beginTransaction();
+        $demand = User::findOrFail($id);
+        $go_to_url = "#";
         if ($request->input('demand_status') === 'Approved' || 'Pending' || 'Rejected' && is_null($demand->reference_id)) {
             $reference_id = IdGenerator::generate([
                 'table' => 'users',
@@ -490,7 +539,6 @@ class CompanyDemandController extends Controller
                 'company_id' => $company_id,
                 'demand_id' => $request->demand_id,
             ])->first();
-            // dd($companyCandidate);
             if($companyCandidate){
                 if($request->has('interview_status')){
                     $companyCandidate->interview_status = $request->interview_status;
@@ -507,11 +555,18 @@ class CompanyDemandController extends Controller
                         }
                         $interview->save();
                     }
-        
+                    
+
+                    $title =  "You Have ".$request->interview_status." By the ".$company->name;
+                    $web_content = 'Congratulation You have '.$request->interview_status.' by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                    $mobile_content = 'Congratulation You have '.$request->interview_status.' by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+
+                    
                 }
                 if($request->has('demand_status')){
                     $companyCandidate->demand_status = $request->demand_status;
                 }
+
                 $companyCandidate->save();
             }else{
                 CompanyCandidate::updateOrCreate([
@@ -522,6 +577,10 @@ class CompanyDemandController extends Controller
                     // 'interview_status'=>$request->interview_status,
                     'demand_status' => ($request->demand_status ?? "Interview"),
                 ]);
+
+                $title =  "You Have ".$request->demand_status." By the ".$company->name;
+                $web_content = 'Congratulation You have '.$request->demand_status.' by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
+                $mobile_content = 'Congratulation You have '.$request->demand_status.' by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
             }
 
 
@@ -533,13 +592,12 @@ class CompanyDemandController extends Controller
                 $generated_to = get_class($demand);
                 $generated_to_id = $demand->id;
                 $company = Company::where('user_id', auth()->user()->id)->latest()->first();
-                $title = "You Have Wishlisted By the ".$company->name;
                 $go_to_url = "#";
                 // in the below the href must be changed;
-                $web_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
-                $mobile_content = 'Congratulation You have selected by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$go_to_url.'">View More</a>';
                 $is_auto = true;
                 $send_to = 4;
+
+
                 (new NotificationAction(
                     $title,
                     $web_content,
@@ -552,6 +610,8 @@ class CompanyDemandController extends Controller
                     $send_to,
                     $go_to_url,
                     ))->pushNotification();
+
+                    DB::rollBack();
             } catch (\Throwable $th) {
                 info("Error While Pushing Notification: ".$th->getMessage());
             }
@@ -719,6 +779,8 @@ class CompanyDemandController extends Controller
 
     public function updateStatusAndNotify(Request $request)
     {
+
+        // DB::beginTransaction();
         // Extract user IDs where user type is CANDIDATE
         // new developed to get only selected user id
         $userIds = collect($request->selectedCandidates ?? [])->filter(function($row){
@@ -737,6 +799,7 @@ class CompanyDemandController extends Controller
 
         // Retrieve a single company candidate for company details
         $companyName = '';
+
         $companyDemand = CompanyDemand::where('demand_code', $request->demand_code)->whereIn('status', ['Open', 'Pending'])->latest()->first();
 
 
@@ -748,12 +811,11 @@ class CompanyDemandController extends Controller
         }
 
 
-
         // New Developed to Update The Interview Status
         CompanyCandidate::whereIn('user_id', $userIds)->update([
             'interview_status'=>UserInterviewStatus::Pending,
         ]);
-
+        $interviewsIds = [];
 
         foreach ($userIds as $userId) {
             $interview = Interview::updateOrCreate(
@@ -768,52 +830,9 @@ class CompanyDemandController extends Controller
                     'interview_venue' => $newInterviewVenue,
                 ]
             );
+            $interviewsIds[] = $interview->id;
             $user = User::find($userId);
             if ($user) {
-                // new developed for the notification
-                try {
-                    if ($interview->wasRecentlyCreated) {
-                        $title = "Your Interview date and time has been Scheduled";
-                    }else{
-                        $title = "Your Interview date and time has been Rescheduled";
-                    }
-                    $generated_by = get_class(auth()->user());
-                    $generated_id = auth()->user()->id;
-                    // This may be change according to the candidate model 
-                    $generated_to = get_class($user);
-                    $generated_to_id = $user->id;
-                    $go_to_url = "#";
-                    // in the below the href must be changed;
-                    $web_content = "Namaste!\n" .
-                    "We'd like to invite you for interview :\n" .
-                    "Date: $interview->interview_date\n" .
-                    "Time: $$interview->interview_time\n" .
-                    "Venue: $$interview->interview_venue\n" .
-                    "Company Name: $companyName";
-
-                    $mobile_content =  "Namaste!\n" .
-                    "We'd like to invite you for interview :\n" .
-                    "Date: $interview->interview_date\n" .
-                    "Time: $$interview->interview_time\n" .
-                    "Venue: $$interview->interview_venue\n" .
-                    "Company Name: $companyName";
-                    $is_auto = true;
-                    $send_to = 1;
-                    (new NotificationAction(
-                        $title,
-                        $web_content,
-                        $mobile_content,
-                        $is_auto,
-                        $generated_by,
-                        $generated_id,
-                        $generated_to,
-                        $generated_to_id,
-                        $send_to,
-                        $go_to_url,
-                        ))->pushNotification();
-                } catch (\Throwable $th) {
-                    info("Error On Push Notification :" .$th->getMessage());
-                }
                 if ($interview->wasRecentlyCreated) {
                     SendInterviewSms::dispatch($user->mobile_no, $interview->interview_date, $interview->interview_time, $interview->interview_venue, $companyName);
                 } else {
@@ -821,6 +840,16 @@ class CompanyDemandController extends Controller
                 }
             }
         }
+
+        // new developed for the notification
+        try {
+            (new CandidateStatusNotificationAction)->sendInterviewScheduled($interviewsIds);
+
+        } catch (\Throwable $th) {
+            info("Error On Push Notification :" .$th->getMessage());
+        }
+
+
         return back()->with('success', 'Selected users updated and notified successfully.');
     }
 

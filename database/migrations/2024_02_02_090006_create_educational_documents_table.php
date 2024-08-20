@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('level');
             $table->string('edu_level');
             $table->string('school_college_name');
-            $table->string('pass_year');
+            $table->string('pass_year')->nullable();
             $table->timestamps();
         });
     }

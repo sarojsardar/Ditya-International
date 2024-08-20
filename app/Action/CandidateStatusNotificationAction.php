@@ -14,6 +14,7 @@ use App\Jobs\NotifyMoveToMedicalJob;
 use App\Jobs\NotifyProceedToVisaJob;
 use App\Enum\DocumentRequirementEnum;
 use App\Jobs\NotifyEticketReceivedJob;
+use App\Jobs\NotifyInterviewStatusJob;
 use App\Jobs\NotifyLabourPermitReceivedJob;
 use App\Models\Candidat\MedicalCheckup;
 use App\Models\Candidate\DocumentProcess;
@@ -48,7 +49,7 @@ class CandidateStatusNotificationAction
         $company = Company::where('user_id', auth()->user()->id)->latest()->first();
         switch ($status) {
             case UserDemandStatus::Approved:
-                $this->title = "You Have Wishlisted By the ".$company->name;
+                $this->title = "You Have Selected for Calling Interview By the ".$company->name;
                 $this->web_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
                 $this->mobile_content = 'Congratulation you are in wishlist by the company  '.$company->name. ' For the further process, you may notify by our system if the interview date is declared you can view by clicking the below linnk <br> <a href="'.$this->go_to_url.'">View More</a>';
                 $this->pushNotification();
@@ -90,9 +91,15 @@ class CandidateStatusNotificationAction
             info("Error : ".$th->getMessage());
         }
     }
+
+
+    public function sendInterviewScheduled($interviewsIds)
+    {
+        dispatch(new NotifyInterviewStatusJob($interviewsIds));
+    }
     public function moveToMedical($medicalCheckupIds)
     {
-        NotifyMoveToMedicalJob::dispatch($medicalCheckupIds);
+        dispatch(new NotifyMoveToMedicalJob($medicalCheckupIds));
     }
     public function updateMedicalCheckupStatus(MedicalCheckup $medicalCheckup)
     {
@@ -108,47 +115,45 @@ class CandidateStatusNotificationAction
     }
     public function proceedToVisa($visaProcessId)
     {
-        NotifyProceedToVisaJob::dispatch($visaProcessId, 'Visa');
+        dispatch(new NotifyProceedToVisaJob($visaProcessId, 'Visa'));
     }
 
     public function proceedToEVisa($visaProcessId)
     {
-        NotifyProceedToVisaJob::dispatch($visaProcessId, 'EVisa');
+        dispatch(new NotifyProceedToVisaJob($visaProcessId, 'EVisa'));
     }
 
     public function visaReceived($visaProcessId)
     {
-        NotifyVisaReceivedJob::dispatch($visaProcessId, 'Visa');
+        dispatch(new NotifyVisaReceivedJob($visaProcessId, 'Visa'));
     }
     public function eVisaReceived($visaProcessId)
     {
-        NotifyVisaReceivedJob::dispatch($visaProcessId, 'EVisa');
+        dispatch(new NotifyVisaReceivedJob($visaProcessId, 'EVisa'));
     }
 
     
 
     public function updateVisaStatus($processIds, $visaType="Proceed")
     {
-        NotifyVisaReceivedJob::dispatch($processIds, 'Visa');
+        dispatch(new NotifyVisaReceivedJob($processIds, 'Visa'));
     }
 
     public function updateEVisaStatus($eVisaIds)
     {
-        NotifyVisaReceivedJob::dispatch($eVisaIds, 'EVisa');
+        dispatch(new NotifyVisaReceivedJob($eVisaIds, 'EVisa'));
     }
 
 
     public function updateLabourPermitStatus($labourPermitIds)
     {
-        NotifyLabourPermitReceivedJob::dispatch($labourPermitIds);
+        dispatch(new NotifyLabourPermitReceivedJob($labourPermitIds));
     }
 
    
-
-
     public function updateETicketStatus($eTicketIds)
     {
-        NotifyEticketReceivedJob::dispatch($eTicketIds);
+        dispatch(new NotifyEticketReceivedJob($eTicketIds));
     }
 
     public function updateCancelledNotification(CompanyCandidate $companyCandidate)
@@ -156,7 +161,6 @@ class CandidateStatusNotificationAction
         
     }
     
-
     public function sendRequiredDocumentNotification(Request $request, CompanyCandidate $companyCandidate)
     {
         $element_ids = $request->element_ids;

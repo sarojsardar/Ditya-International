@@ -74,6 +74,11 @@ Route::middleware(['auth:web'])->prefix('user')->group(function(){
     Route::post('/company-demand-entry/store', [CompanyDemandController::class, 'store'])->name('company-demand.store')->middleware(['can:demand-create']);
     Route::get('/company-demand-entry/edit/{id}', [CompanyDemandController::class, 'edit'])->name('company-demand.edit')->middleware(['can:demand-update']);
     Route::put('/company-demand-entry/update/{id}', [CompanyDemandController::class, 'update'])->name('company-demand.update')->middleware(['can:demand-update']);
+
+    // new developed for the company demand close
+    Route::patch('/company-demand-entry/{id}/update/', [CompanyDemandController::class, 'closeDemand'])->name('company-demand.close')->middleware(['can:demand-update']);
+
+
     Route::get('/company-demand-entry/detail/{id}', [CompanyDemandController::class, 'detail'])->name('company-demand.detail')->middleware(['can:demand-read']);
     Route::get('/company-demand-entry/getCompanyDetail/{id}', [CompanyDemandController::class, 'getCompanyDetail'])->name('company-demand.getCompanyDetail')->middleware(['can:demand-create']);
 

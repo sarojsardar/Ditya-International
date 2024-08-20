@@ -182,7 +182,7 @@ class CompanyController extends Controller
             'categories' => 'sometimes|array|exists:categories,id'
         ]);
 
-        try {
+        // try {
             DB::beginTransaction();
             $filename = $company->logo;
             if ($request->hasFile('company_logo')) {
@@ -192,7 +192,7 @@ class CompanyController extends Controller
 
             $company->update([
                 'name' => $validated['company_name'],
-                'email' => $validated['company_email'],
+                // 'email' => $validated['company_email'],
                 'logo' => $filename,
                 'country' => $validated['country'],
             ]);
@@ -204,11 +204,11 @@ class CompanyController extends Controller
             DB::commit();
 
             return redirect()->route('company.index')->with('success', 'Company details updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to update company: ' . $e->getMessage());
-            return back()->with('error', 'Failed to update company details.');
-        }
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+        //     Log::error('Failed to update company: ' . $e->getMessage());
+        //     return back()->with('error', 'Failed to update company details.');
+        // }
     }
 
 

@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('reschedule_venue')->nullable();
             $table->text('reschedule_reason')->nullable();
             $table->boolean('is_taken')->default(false);
+            $table->boolean('is_attend')->default(false);
+            $table->string('qr')->nullable();
             $table->boolean('is_selected')->default(false);
             $table->enum('user_accept_status', ['Pending', 'Accepted', 'Declined'])->default('Pending');
             $table->timestamps();
